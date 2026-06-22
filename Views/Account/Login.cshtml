@@ -6,11 +6,11 @@
 <div class="auth-wrapper">
     <!-- Background glow blobs -->
     <div style="position:fixed;top:20%;left:10%;width:300px;height:300px;
-                background:radial-gradient(circle,rgba(99,102,241,0.08),transparent 70%);
-                pointer-events:none;animation:float 6s ease-in-out infinite;"></div>
+    background:radial-gradient(circle,rgba(99,102,241,0.08),transparent 70%);
+    pointer-events:none;animation:float 6s ease-in-out infinite;"></div>
     <div style="position:fixed;bottom:15%;right:10%;width:250px;height:250px;
-                background:radial-gradient(circle,rgba(139,92,246,0.06),transparent 70%);
-                pointer-events:none;animation:float 8s ease-in-out infinite reverse;"></div>
+    background:radial-gradient(circle,rgba(139,92,246,0.06),transparent 70%);
+    pointer-events:none;animation:float 8s ease-in-out infinite reverse;"></div>
 
     <div class="auth-card">
         <div class="auth-icon">👋</div>
@@ -24,7 +24,10 @@
 
             <div class="form-group">
                 <label class="form-label" asp-for="Email">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                    </svg>
                     Email Address
                 </label>
                 <input asp-for="Email" class="form-control" placeholder="you@example.com" type="email" autofocus />
@@ -33,12 +36,18 @@
 
             <div class="form-group">
                 <label class="form-label" asp-for="Password">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
                     Password
                 </label>
                 <div style="position:relative;">
-                    <input asp-for="Password" class="form-control" placeholder="Your password" type="password" id="pwd-input" />
-                    <button type="button" onclick="togglePwd()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem;" tabindex="-1">👁</button>
+                    <input asp-for="Password" class="form-control" placeholder="Your password" type="password"
+                           id="pwd-input" />
+                    <button type="button" onclick="togglePwd()"
+                            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem;"
+                            tabindex="-1">👁</button>
                 </div>
                 <span asp-validation-for="Password" class="field-validation-error"></span>
             </div>
@@ -46,37 +55,33 @@
             <div class="form-group" style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1.5rem;">
                 <input asp-for="RememberMe" type="checkbox" id="rememberMe"
                        style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer;" />
-                <label for="rememberMe" style="font-size:0.85rem;color:var(--text-secondary);cursor:pointer;">Keep me signed in</label>
-            </div>
+                <label for="rememberMe" style="font-size:0.85rem;color:var(--text-secondary);cursor:pointer;">Keep me
+                    signed in</label>
+                </div>
 
-            <button type="submit" class="btn btn-primary btn-full btn-lg">
-                Sign In
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
-            </button>
-        </form>
+                <button type="submit" class="btn btn-primary btn-full btn-lg">
+                    Sign In
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12,5 19,12 12,19" />
+                    </svg>
+                </button>
+            </form>
 
-        <div class="divider">Demo Credentials</div>
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-md);padding:0.75rem 1rem;font-size:0.78rem;color:var(--text-muted);">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span>🔑 Admin</span>
-                <code style="color:var(--accent-light);font-size:0.75rem;">admin@jobboard.com / Admin@123!</code>
-            </div>
+            <p style="text-align:center;color:var(--text-muted);font-size:0.875rem;margin-top:1.5rem;">
+                Don't have an account?
+                <a asp-controller="Account" asp-action="Register"
+                   style="color:var(--accent-light);font-weight:600;text-decoration:none;"> Sign up free →</a>
+            </p>
         </div>
-
-        <p style="text-align:center;color:var(--text-muted);font-size:0.875rem;margin-top:1.5rem;">
-            Don't have an account?
-            <a asp-controller="Account" asp-action="Register"
-               style="color:var(--accent-light);font-weight:600;text-decoration:none;"> Sign up free →</a>
-        </p>
     </div>
-</div>
 
-@section Scripts {
-    <partial name="_ValidationScripts" />
-    <script>
-        function togglePwd() {
-            const inp = document.getElementById('pwd-input');
-            inp.type = inp.type === 'password' ? 'text' : 'password';
-        }
-    </script>
-}
+    @section Scripts {
+        <partial name="_ValidationScripts" />
+        <script>
+            function togglePwd() {
+                const inp = document.getElementById('pwd-input');
+                inp.type = inp.type === 'password' ? 'text' : 'password';
+            }
+        </script>
+    }
