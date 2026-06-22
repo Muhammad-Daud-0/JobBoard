@@ -1,0 +1,597 @@
+@inject Microsoft.AspNetCore.Identity.UserManager<JobBoard.Models.Entities.ApplicationUser> UserManager
+@{
+    JobBoard.Models.Entities.ApplicationUser? currentUser = null;
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        currentUser = await UserManager.GetUserAsync(User);
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description"
+          content="JobBoard — Discover thousands of opportunities or hire the talent you need." />
+    <title>@ViewData["Title"] — JobBoard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="icon" type="image/png" href="~/favicon.png" />
+</head>
+
+<body>
+
+    <!-- Particle canvas lives behind everything -->
+    <canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+    <!-- ── Navbar ─────────────────────────────────────────────────────── -->
+    <nav class="navbar">
+        <div class="nav-container">
+
+            <a class="nav-brand" asp-controller="Jobs" asp-action="Index">
+                <div class="brand-logo">💼</div>
+                <span class="brand-text">Job<strong>Board</strong></span>
+            </a>
+
+            <div class="nav-links">
+                <a asp-controller="Jobs" asp-action="Index" class="nav-link">Browse Jobs</a>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    @if (User.IsInRole("Employer"))
+                    {
+                        <a asp-controller="Jobs" asp-action="Create" class="nav-link">Post Job</a>
+                        <a asp-controller="Jobs" asp-action="MyJobs" class="nav-link">My Listings</a>
+                    }
+                    @if (User.IsInRole("Candidate"))
+                    {
+                        <a asp-controller="Applications" asp-action="MyApplications" class="nav-link">My Applications</a>
+                    }
+                    @if (User.IsInRole("Employer") || User.IsInRole("Candidate"))
+                    {
+                        <a asp-controller="Chat" asp-action="Index" class="nav-link">Messages</a>
+                    }
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-controller="Admin" asp-action="Users" class="nav-link">⚙️ Admin</a>
+                    }
+
+                    <div class="nav-user">
+                        <a asp-controller="Account" asp-action="Profile" class="nav-username"
+                           style="text-decoration:none; display:flex; align-items:center; flex-direction:row; gap:8px; transition:border-color var(--transition);">
+                            @if (currentUser != null && !string.IsNullOrEmpty(currentUser.ProfileImageUrl))
+                            {
+                                <img src="@currentUser.ProfileImageUrl" alt="Avatar"
+                                     style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:1px solid var(--border-accent);" />
+                            }
+                            else
+                            {
+                                <span
+                                    style="width:50px; height:50px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent-2)); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:bold; color:#fff; flex-shrink:0;">
+                                    @(currentUser?.FullName?.Length > 0 ? currentUser.FullName[0].ToString().ToUpper() :
+                          "?")
+                                </span>
+                            }
+                            <span>@@@User.Identity.Name</span>
+                        </a>
+                        <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-ghost btn-sm">Sign Out</button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-ghost btn-sm">Sign In</a>
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-sm">Get Started →</a>
+                }
+            </div>
+
+        </div>
+    </nav>
+
+    <!-- ── Main ───────────────────────────────────────────────────────── -->
+    <main class="main-content">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success" role="alert">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20,6 9,17 4,12" />
+                </svg>
+                @TempData["Success"]
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-error" role="alert">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+                @TempData["Error"]
+            </div>
+        }
+
+        @RenderBody()
+    </main>
+
+    <!-- ── Footer ─────────────────────────────────────────────────────── -->
+    <footer class="footer">
+        <div class="footer-container">
+            <!-- Column 1: Brand -->
+            <div>
+                <div
+                    style="font-size:1.15rem; font-weight:800; color:var(--text-primary); margin-bottom:0.75rem; display:flex; align-items:center; gap:8px;">
+                    <div
+                        style="width:24px; height:24px; background:linear-gradient(135deg, var(--accent), var(--accent-2)); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">
+                        💼</div>
+                        <span>Job<strong>Board</strong></span>
+                    </div>
+                    <p
+                        style="font-size:0.8rem; color:var(--text-muted); line-height:1.6; max-width:280px; margin-bottom:1rem;">
+                        Discover top tech roles or hire verified experts. Built on premium dotnet stacks and real-time
+                        chat widgets.
+                    </p>
+                    <p style="font-size:0.78rem; color:var(--text-muted);">
+                        © @DateTime.Now.Year JobBoard. All rights reserved.
+                    </p>
+                </div>
+
+                <!-- Column 2: Navigation Links -->
+                <div>
+                    <h4
+                        style="font-size:0.8rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-secondary); margin-bottom:0.85rem;">
+                        Company</h4>
+                        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                            <a asp-controller="Home" asp-action="About" class="footer-link">About Us</a>
+                            <a asp-controller="Home" asp-action="Contact" class="footer-link">Contact Us</a>
+                            <a asp-controller="Jobs" asp-action="Index" class="footer-link">Browse Jobs</a>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Legal & Docs -->
+                    <div>
+                        <h4
+                            style="font-size:0.8rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-secondary); margin-bottom:0.85rem;">
+                            Legal & API</h4>
+                            <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                                <a asp-controller="Home" asp-action="Privacy" class="footer-link">Privacy Policy</a>
+                                <a asp-controller="Home" asp-action="Terms" class="footer-link">Terms of Service</a>
+                                <a href="/swagger" class="footer-link" target="_blank">Swagger API Docs</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+
+                @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Employer") || User.IsInRole("Candidate")))
+                {
+                    <!-- Floating Chat Icon Widget -->
+                    <a href="javascript:void(0)" class="floating-chat-btn" id="floatingChatBtn" onclick="toggleMiniChat(event)"
+                       data-tooltip="Inbox Messages">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <span class="chat-badge" id="globalChatBadge" style="display: none;">0</span>
+                    </a>
+
+                    <!-- Mini Chat Widget Drawer -->
+                    <div id="miniChatContainer" class="mini-chat-container card" style="display: none;">
+                        <!-- Header -->
+                        <div class="mini-chat-header">
+                            <div class="mini-chat-title" id="miniChatTitle">Messages</div>
+                            <div class="mini-chat-actions">
+                                <a href="/Messages" id="miniChatExpandBtn" class="mini-chat-action-btn" title="Open full page">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2.5">
+                                        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                                    </svg>
+                                </a>
+                                <button id="miniChatCloseBtn" class="mini-chat-action-btn" title="Close"
+                                        onclick="toggleMiniChat(event)">&times;</button>
+                            </div>
+                        </div>
+
+                        <!-- Conversations Panel -->
+                        <div id="miniChatConvosPanel" class="mini-chat-panel">
+                            <div class="mini-chat-scrollable" id="miniChatConvosList">
+                                <div style="text-align:center; padding:2rem 1rem; color:var(--text-muted); font-size:0.85rem;">
+                                    Loading conversations…
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Active Chat Panel -->
+                        <div id="miniChatActivePanel" class="mini-chat-panel" style="display: none;">
+                            <div class="mini-chat-subheader">
+                                <button onclick="backToMiniConvos(event)" class="mini-chat-back-btn">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2.5">
+                                        <polyline points="15,18 9,12 15,6" />
+                                    </svg>
+                                    Back
+                                </button>
+                                <div class="mini-chat-recipient-info">
+                                    <strong id="miniChatRecipientName">Recipient</strong>
+                                    <span id="miniChatRecipientRole">User</span>
+                                </div>
+                            </div>
+                            <div class="mini-chat-scrollable mini-chat-messages" id="miniChatMessages">
+                                <!-- Messages -->
+                            </div>
+                            <form id="miniChatForm" class="mini-chat-input-area" onsubmit="handleMiniChatSubmit(event)">
+                                <input type="text" id="miniChatMessageInput" class="form-control"
+                                       style="padding:0.45rem 0.75rem; font-size:0.85rem;" placeholder="Type a message…" required
+                                       autocomplete="off" />
+                                <button type="submit" class="btn btn-primary btn-sm">Send</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Global Toast Container for Popups -->
+                    <div id="global-toast-container" class="global-toast-container"></div>
+
+                    <script>
+                                let toggleMiniChat;
+                                let backToMiniConvos;
+                                let handleMiniChatSubmit;
+                                let receiverId; // Global so active page script can read it
+
+                                document.addEventListener("DOMContentLoaded", function () {
+                                    let lastSeenMessageId = 0;
+                                    let isFirstPoll = true;
+                                    let activeMiniChatUserId = null;
+                                    let activeMiniChatPollInterval = null;
+                                    let lastMiniChatMessageCount = 0;
+
+                                    const badge = document.getElementById("globalChatBadge");
+                                    const btn = document.getElementById("floatingChatBtn");
+                                    const toastContainer = document.getElementById("global-toast-container");
+                                    const miniChatContainer = document.getElementById("miniChatContainer");
+                                    const convosPanel = document.getElementById("miniChatConvosPanel");
+                                    const convosList = document.getElementById("miniChatConvosList");
+                                    const activePanel = document.getElementById("miniChatActivePanel");
+                                    const miniChatMessages = document.getElementById("miniChatMessages");
+                                    const miniChatMessageInput = document.getElementById("miniChatMessageInput");
+                                    const recipientName = document.getElementById("miniChatRecipientName");
+                                    const recipientRole = document.getElementById("miniChatRecipientRole");
+                                    const expandBtn = document.getElementById("miniChatExpandBtn");
+
+                                    // Check if we are on the Chat page to hide floating chat icon
+                                    const isChatPage = window.location.pathname.toLowerCase().includes("/messages") || window.location.pathname.toLowerCase().includes("/chat");
+                                    if (isChatPage && btn) {
+                                        btn.style.display = "none";
+                                    }
+
+                                    // Toggle mini chat drawer visibility
+                                    toggleMiniChat = function (e) {
+                                        if (e) e.preventDefault();
+                                        if (miniChatContainer.style.display === "none") {
+                                            miniChatContainer.style.display = "flex";
+                                            miniChatContainer.classList.add("reveal-toast");
+                                            loadMiniChatConversations();
+                                        } else {
+                                            miniChatContainer.classList.remove("reveal-toast");
+                                            miniChatContainer.style.display = "none";
+                                            if (activeMiniChatPollInterval) {
+                                                clearInterval(activeMiniChatPollInterval);
+                                                activeMiniChatPollInterval = null;
+                                            }
+                                        }
+                                    };
+
+                                    // Switch back to conversations list
+                                    backToMiniConvos = function (e) {
+                                        if (e) e.preventDefault();
+                                        activeMiniChatUserId = null;
+                                        receiverId = null;
+                                        if (activeMiniChatPollInterval) {
+                                            clearInterval(activeMiniChatPollInterval);
+                                            activeMiniChatPollInterval = null;
+                                        }
+                                        activePanel.style.display = "none";
+                                        convosPanel.style.display = "block";
+                                        expandBtn.href = "/Messages";
+                                        loadMiniChatConversations();
+                                    };
+
+                                    // Fetch and render conversations list in mini chat
+                                    async function loadMiniChatConversations() {
+                                        convosList.innerHTML = `<div style="text-align:center; padding:2rem 1rem; color:var(--text-muted); font-size:0.85rem;">Loading conversations…</div>`;
+                                        try {
+                                            const response = await fetch("/Chat/GetConversations");
+                                            if (response.ok) {
+                                                const data = await response.json();
+                                                convosList.innerHTML = "";
+                                                if (data.length === 0) {
+                                                    convosList.innerHTML = `<div style="text-align:center; padding:2rem 1rem; color:var(--text-muted); font-size:0.85rem;">No active chats. Start messaging candidates/employers from applications!</div>`;
+                                                    return;
+                                                }
+                                                data.forEach(c => {
+                                                    const item = document.createElement("div");
+                                                    item.className = "mini-convo-item";
+                                                    item.onclick = () => openMiniConversation(c.otherUserId, c.otherUserName, c.otherUserRole);
+
+                                                    const formattedTime = formatSimpleTime(new Date(c.lastMessageTimestamp));
+
+                                                    item.innerHTML = `
+                                                                                                                                                                                                                                                            <div class="mini-convo-avatar">
+                                                                                                                                                                                                                                                                ${c.otherUserName[0].toUpperCase()}
+                                                                                                                                                                                                                                                            </div>
+                                                                                                                                                                                                                                                            <div class="mini-convo-info">
+                                                                                                                                                                                                                                                                <div style="display:flex; justify-content:space-between; align-items:baseline; gap:0.25rem;">
+                                                                                                                                                                                                                                                                    <span class="mini-convo-name">${c.otherUserName}</span>
+                                                                                                                                                                                                                                                                    <span class="mini-convo-time">${formattedTime}</span>
+                                                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                                                <div style="display:flex; justify-content:space-between; align-items:center; gap:0.25rem; margin-top:2px;">
+                                                                                                                                                                                                                                                                    <span class="mini-convo-preview">${c.lastMessageContent}</span>
+                                                                                                                                                                                                                                                                    ${c.hasUnread ? '<span class="unread-dot"></span>' : ''}
+                                                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                                            </div>
+                                                                                                                                                                                                                                                        `;
+                                                    convosList.appendChild(item);
+                                                });
+                                            } else {
+                                                convosList.innerHTML = `<div style="text-align:center; padding:1.5rem 1rem; color:var(--red); font-size:0.85rem;">Failed to load chats.</div>`;
+                                            }
+                                        } catch (err) {
+                                            console.error("Error loading mini chat conversations:", err);
+                                            convosList.innerHTML = `<div style="text-align:center; padding:1.5rem 1rem; color:var(--red); font-size:0.85rem;">Error loading chats.</div>`;
+                                        }
+                                    }
+
+                                    // Open a specific conversation inside the mini chat
+                                    async function openMiniConversation(userId, userName, role) {
+                                        activeMiniChatUserId = userId;
+                                        receiverId = userId;
+                                        recipientName.textContent = userName;
+                                        recipientRole.textContent = role;
+                                        expandBtn.href = `/Messages?withUserId=${userId}`;
+
+                                        convosPanel.style.display = "none";
+                                        activePanel.style.display = "flex";
+                                        miniChatMessages.innerHTML = `<div style="text-align:center; padding:2rem 1rem; color:var(--text-muted); font-size:0.82rem;">Loading messages…</div>`;
+
+                                        await fetchAndRenderMiniMessages();
+                                        miniChatMessages.scrollTop = miniChatMessages.scrollHeight;
+
+                                        // Start message polling inside the active mini chat
+                                        if (activeMiniChatPollInterval) clearInterval(activeMiniChatPollInterval);
+                                        activeMiniChatPollInterval = setInterval(fetchAndRenderMiniMessages, 3000);
+                                    }
+
+                                    // Fetch and render messages list in mini chat active panel
+                                    async function fetchAndRenderMiniMessages() {
+                                        if (!activeMiniChatUserId) return;
+                                        try {
+                                            const response = await fetch(`/Chat/GetMessages?withUserId=${activeMiniChatUserId}`);
+                                            if (response.ok) {
+                                                const messages = await response.json();
+                                                miniChatMessages.innerHTML = "";
+
+                                                if (messages.length === 0) {
+                                                    miniChatMessages.innerHTML = `<div style="text-align:center; padding:2rem 1rem; color:var(--text-muted); font-size:0.82rem;">No messages yet. Send a message to start chatting!</div>`;
+                                                    lastMiniChatMessageCount = 0;
+                                                    return;
+                                                }
+
+                                                messages.forEach(msg => {
+                                                    const isMe = msg.senderId !== activeMiniChatUserId;
+                                                    const row = document.createElement("div");
+                                                    row.className = `mini-message-row ${isMe ? 'me' : 'them'}`;
+                                                    row.setAttribute("data-mini-msg-id", msg.id);
+
+                                                    const formattedTime = formatHourTime(new Date(msg.timestamp));
+
+                                                    const bubble = document.createElement("div");
+                                                    bubble.className = "mini-message-bubble";
+
+                                                    const text = document.createElement("div");
+                                                    text.className = "mini-message-content";
+                                                    text.textContent = msg.content;
+
+                                                    const timeSpan = document.createElement("div");
+                                                    timeSpan.className = "mini-message-time";
+                                                    timeSpan.textContent = formattedTime + " ";
+
+                                                    if (isMe) {
+                                                        const check = document.createElement("span");
+                                                        check.className = `mini-msg-check ${msg.isRead ? 'read' : 'delivered'}`;
+                                                        check.textContent = " ✓✓";
+                                                        timeSpan.appendChild(check);
+                                                    }
+
+                                                    bubble.appendChild(text);
+                                                    bubble.appendChild(timeSpan);
+                                                    row.appendChild(bubble);
+                                                    miniChatMessages.appendChild(row);
+                                                });
+
+                                                if (messages.length > lastMiniChatMessageCount) {
+                                                    lastMiniChatMessageCount = messages.length;
+                                                    miniChatMessages.scrollTop = miniChatMessages.scrollHeight;
+                                                }
+                                            }
+                                        } catch (err) {
+                                            console.error("Error loading mini chat messages:", err);
+                                        }
+                                    }
+
+                                    // Handle submission inside the mini chat
+                                    handleMiniChatSubmit = async function (e) {
+                                        e.preventDefault();
+                                        const content = miniChatMessageInput.value.trim();
+                                        if (!content || !activeMiniChatUserId) return false;
+
+                                        miniChatMessageInput.value = "";
+
+                                        // Append sent bubble locally (single check)
+                                        const row = document.createElement("div");
+                                        row.className = "mini-message-row me";
+                                        const bubble = document.createElement("div");
+                                        bubble.className = "mini-message-bubble";
+                                        const text = document.createElement("div");
+                                        text.className = "mini-message-content";
+                                        text.textContent = content;
+                                        const timeSpan = document.createElement("div");
+                                        timeSpan.className = "mini-message-time";
+                                        timeSpan.textContent = formatHourTime(new Date()) + " ";
+                                        const check = document.createElement("span");
+                                        check.className = "mini-msg-check sent";
+                                        check.textContent = " ✓";
+                                        timeSpan.appendChild(check);
+                                        bubble.appendChild(text);
+                                        bubble.appendChild(timeSpan);
+                                        row.appendChild(bubble);
+                                        miniChatMessages.appendChild(row);
+                                        miniChatMessages.scrollTop = miniChatMessages.scrollHeight;
+
+                                        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                                        try {
+                                            const formData = new FormData();
+                                            formData.append("ReceiverId", activeMiniChatUserId);
+                                            formData.append("Content", content);
+                                            formData.append("__RequestVerificationToken", token);
+
+                                            const response = await fetch("/Chat/SendMessage", {
+                                                method: "POST",
+                                                body: formData
+                                            });
+
+                                            if (response.ok) {
+                                                lastMiniChatMessageCount++;
+                                            }
+                                        } catch (err) {
+                                            console.error("Error sending mini chat message:", err);
+                                        }
+
+                                        return false;
+                                    };
+
+                                    // Formatting helper functions
+                                    function formatSimpleTime(date) {
+                                        const diff = new Date() - date;
+                                        if (diff < 24 * 60 * 60 * 1000) {
+                                            return formatHourTime(date);
+                                        }
+                                        if (diff < 48 * 60 * 60 * 1000) {
+                                            return "Yesterday";
+                                        }
+                                        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                                    }
+
+                                    function formatHourTime(date) {
+                                        let hours = date.getHours();
+                                        let minutes = date.getMinutes();
+                                        const ampm = hours >= 12 ? 'PM' : 'AM';
+                                        hours = hours % 12;
+                                        hours = hours ? hours : 12;
+                                        minutes = minutes < 10 ? '0' + minutes : minutes;
+                                        return `${hours}:${minutes} ${ampm}`;
+                                    }
+
+                                    // Function to display popup toast notifications
+                                    function showChatToast(senderName, content, senderId) {
+                                        const toast = document.createElement("div");
+                                        toast.className = "chat-toast-popup reveal-toast";
+
+                                        toast.innerHTML = `
+                                                                                                                                                                                                                                                <div class="toast-avatar">
+                                                                                                                                                                                                                                                    ${senderName[0].toUpperCase()}
+                                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                                <div class="toast-body">
+                                                                                                                                                                                                                                                    <div class="toast-title">New message from <strong>${senderName}</strong></div>
+                                                                                                                                                                                                                                                    <div class="toast-message">${content}</div>
+                                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                                <button class="toast-close-btn">&times;</button>
+                                                                                                                                                                                                                                            `;
+
+                                        // Clicking the toast redirects to that conversation in the full view
+                                        toast.addEventListener("click", function (e) {
+                                            if (e.target.classList.contains("toast-close-btn")) {
+                                                e.stopPropagation();
+                                                toast.classList.remove("reveal-toast");
+                                                toast.classList.add("hide-toast");
+                                                setTimeout(() => toast.remove(), 300);
+                                                return;
+                                            }
+                                            window.location.href = `/Messages?withUserId=${senderId}`;
+                                        });
+
+                                        toastContainer.appendChild(toast);
+
+                                        // Auto remove after 5 seconds
+                                        setTimeout(() => {
+                                            if (toast.parentNode) {
+                                                toast.classList.remove("reveal-toast");
+                                                toast.classList.add("hide-toast");
+                                                setTimeout(() => toast.remove(), 300);
+                                            }
+                                        }, 5000);
+                                    }
+
+                                    // Polling routine for global unread counter and toast popups
+                                    async function pollUnreadStatus() {
+                                        // Determine active recipient (either from the active full chat view or mini chat view)
+                                        const activeChatWithUserId = receiverId || (typeof receiverId !== 'undefined' ? receiverId : null);
+
+                                        try {
+                                            const response = await fetch(`/Chat/GetUnreadStatus?lastSeenMessageId=${lastSeenMessageId}`);
+                                            if (response.ok) {
+                                                const data = await response.json();
+
+                                                // 1. Update global badge
+                                                const count = data.unreadCount;
+                                                if (count > 0) {
+                                                    badge.textContent = count;
+                                                    badge.style.display = "flex";
+                                                } else {
+                                                    badge.style.display = "none";
+                                                }
+
+                                                // 2. Process incoming unread messages
+                                                if (data.newMessages && data.newMessages.length > 0) {
+                                                    let maxId = lastSeenMessageId;
+
+                                                    data.newMessages.forEach(msg => {
+                                                        maxId = Math.max(maxId, msg.id);
+
+                                                        // Show toast alert if it's not the first poll,
+                                                        // we aren't currently talking to them in full chat,
+                                                        // and the mini chat is not open chatting with them!
+                                                        if (!isFirstPoll) {
+                                                            const isMiniChatOpenWithThisUser = (miniChatContainer.style.display !== "none" && activeMiniChatUserId === msg.senderId);
+                                                            if (activeChatWithUserId !== msg.senderId && !isMiniChatOpenWithThisUser) {
+                                                                showChatToast(msg.senderName, msg.content, msg.senderId);
+                                                            }
+                                                        }
+                                                    });
+
+                                                    lastSeenMessageId = maxId;
+                                                }
+
+                                                isFirstPoll = false;
+                                            }
+                                        } catch (err) {
+                                            console.error("Error polling unread status:", err);
+                                        }
+                                    }
+
+                                    // Run initial check, then poll every 4 seconds
+                                    pollUnreadStatus();
+                                    setInterval(pollUnreadStatus, 4000);
+                                });
+                    </script>
+                }
+
+                <script src="~/js/animations.js" asp-append-version="true"></script>
+                @await RenderSectionAsync("Scripts", required: false)
+            </body>
+
+        </html>

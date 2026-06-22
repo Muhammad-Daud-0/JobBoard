@@ -1,0 +1,154 @@
+@model JobBoard.Models.DTOs.Auth.RegisterDto
+@{
+    ViewData["Title"] = "Create Account";
+}
+
+<div class="auth-wrapper" style="align-items:flex-start;padding-top:2rem;padding-bottom:2rem;">
+    <div style="position:fixed;top:15%;right:8%;width:280px;height:280px;
+                background:radial-gradient(circle,rgba(99,102,241,0.07),transparent 70%);
+                pointer-events:none;animation:float 7s ease-in-out infinite;"></div>
+
+    <div class="auth-card" style="max-width:520px;">
+        <div class="auth-icon">✨</div>
+        <h1 class="auth-title">Create Account</h1>
+        <p class="auth-subtitle">Join thousands of professionals on JobBoard</p>
+
+        <form asp-action="Register" method="post" id="register-form">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="All" class="validation-summary-errors"
+                 style="@(ViewData.ModelState.ErrorCount > 0 ? "" : "display:none")"></div>
+
+            <!-- Role Selector -->
+            <div class="form-group">
+                <label class="form-label">I am a</label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                    <label style="cursor:pointer;" onclick="selectRole('Candidate')">
+                        <input type="radio" asp-for="Role" value="Candidate" style="display:none;" id="role-candidate" />
+                        <div class="role-option" id="card-candidate">
+                            <span class="role-option-icon">🎓</span>
+                            <div style="font-weight:700;font-size:0.9rem;margin-bottom:2px;">Candidate</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">Browse &amp; apply to jobs</div>
+                        </div>
+                    </label>
+                    <label style="cursor:pointer;" onclick="selectRole('Employer')">
+                        <input type="radio" asp-for="Role" value="Employer" style="display:none;" id="role-employer" />
+                        <div class="role-option" id="card-employer">
+                            <span class="role-option-icon">🏢</span>
+                            <div style="font-weight:700;font-size:0.9rem;margin-bottom:2px;">Employer</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">Post jobs &amp; hire talent</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Company Name (Employer only) -->
+            <div id="company-field" style="display:none;" class="form-group">
+                <label class="form-label" asp-for="CompanyName">🏢 Company Name *</label>
+                <input asp-for="CompanyName" class="form-control" placeholder="e.g. Acme Corp" />
+                <span asp-validation-for="CompanyName" class="field-validation-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" asp-for="UserName">🏷️ Username *</label>
+                <input asp-for="UserName" class="form-control" placeholder="e.g. johndoe" />
+                <span asp-validation-for="UserName" class="field-validation-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" asp-for="FullName">👤 Full Name *</label>
+                <input asp-for="FullName" class="form-control" placeholder="John Doe" />
+                <span asp-validation-for="FullName" class="field-validation-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" asp-for="Email">✉️ Email Address *</label>
+                <input asp-for="Email" class="form-control" placeholder="you@example.com" type="email" />
+                <span asp-validation-for="Email" class="field-validation-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" asp-for="Address">📍 Home/Work Address *</label>
+                <input asp-for="Address" class="form-control" placeholder="City, Country" />
+                <span asp-validation-for="Address" class="field-validation-error"></span>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                <div class="form-group">
+                    <label class="form-label" asp-for="Password">🔒 Password *</label>
+                    <input asp-for="Password" class="form-control" placeholder="Min. 8 chars" type="password" />
+                    <span asp-validation-for="Password" class="field-validation-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" asp-for="ConfirmPassword">🔁 Confirm *</label>
+                    <input asp-for="ConfirmPassword" class="form-control" placeholder="Repeat password" type="password" />
+                    <span asp-validation-for="ConfirmPassword" class="field-validation-error"></span>
+                </div>
+            </div>
+
+            <!-- Password strength indicator -->
+            <div id="strength-wrap" style="margin-top:-0.75rem;margin-bottom:1.25rem;display:none;">
+                <div style="height:4px;border-radius:2px;background:var(--border);overflow:hidden;">
+                    <div id="strength-bar" style="height:100%;width:0;border-radius:2px;transition:all 0.4s ease;background:var(--red);"></div>
+                </div>
+                <span id="strength-text" style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;display:block;"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full btn-lg" style="margin-top:0.25rem;">
+                Create Account
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+            </button>
+        </form>
+
+        <p style="text-align:center;color:var(--text-muted);font-size:0.875rem;margin-top:1.5rem;">
+            Already have an account?
+            <a asp-controller="Account" asp-action="Login"
+               style="color:var(--accent-light);font-weight:600;text-decoration:none;"> Sign in →</a>
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScripts" />
+    <script>
+        function selectRole(role) {
+            document.getElementById('role-candidate').checked = role === 'Candidate';
+            document.getElementById('role-employer').checked = role === 'Employer';
+            document.getElementById('card-candidate').classList.toggle('selected', role === 'Candidate');
+            document.getElementById('card-employer').classList.toggle('selected', role === 'Employer');
+            const cf = document.getElementById('company-field');
+            cf.style.display = role === 'Employer' ? 'block' : 'none';
+            if (role === 'Employer') {
+                cf.style.animation = 'alertSlide 0.3s ease both';
+            }
+        }
+        selectRole('@(Model?.Role ?? "Candidate")');
+
+        // Password strength meter
+        const pwdInput = document.querySelector('input[type="password"]');
+        const bar  = document.getElementById('strength-bar');
+        const text = document.getElementById('strength-text');
+        const wrap = document.getElementById('strength-wrap');
+        if (pwdInput) {
+            pwdInput.addEventListener('input', () => {
+                const val = pwdInput.value;
+                wrap.style.display = val.length ? 'block' : 'none';
+                let score = 0;
+                if (val.length >= 8)  score++;
+                if (/[A-Z]/.test(val)) score++;
+                if (/[0-9]/.test(val)) score++;
+                if (/[^a-zA-Z0-9]/.test(val)) score++;
+                const levels = [
+                    { w:'20%', bg:'#ef4444', label:'Weak' },
+                    { w:'45%', bg:'#f59e0b', label:'Fair' },
+                    { w:'70%', bg:'#3b82f6', label:'Good' },
+                    { w:'100%',bg:'#10b981', label:'Strong 💪' },
+                ];
+                const lvl = levels[Math.max(0, score - 1)];
+                bar.style.width      = lvl.w;
+                bar.style.background = lvl.bg;
+                text.textContent     = 'Strength: ' + lvl.label;
+                text.style.color     = lvl.bg;
+            });
+        }
+    </script>
+}

@@ -1,0 +1,254 @@
+@model JobBoard.Models.DTOs.Jobs.JobDetailDto
+@using JobBoard.Models.Entities
+@{
+    ViewData["Title"] = Model.Title;
+    bool hasApplied = ViewBag.HasApplied ?? false;
+}
+
+<div style="margin-bottom:2rem;" class="reveal">
+    <a asp-controller="Jobs" asp-action="Index" class="btn btn-ghost btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15,18 9,12 15,6"/></svg>
+        Back to Jobs
+    </a>
+</div>
+
+<div class="detail-grid">
+    <!-- ── Main Column ─────────────────────────────────────────── -->
+    <div>
+        <!-- Job Header Card -->
+        <div class="card reveal" style="margin-bottom:1.5rem; padding:2rem;">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:1.75rem;">
+                <div style="display:flex; align-items:flex-start; gap:1rem;">
+                    <div style="width:64px;height:64px;border-radius:16px;
+                                background:linear-gradient(135deg,rgba(99,102,241,0.25),rgba(139,92,246,0.15));
+                                border:1px solid var(--border-accent);
+                                display:flex;align-items:center;justify-content:center;
+                                font-size:1.8rem;flex-shrink:0;
+                                box-shadow:0 0 24px rgba(99,102,241,0.15);">
+                        @GetEmoji(Model.Category)
+                    </div>
+                    <div>
+                        <h1 style="font-size:1.65rem;font-weight:900;letter-spacing:-0.03em;margin-bottom:4px;">@Model.Title</h1>
+                        <p style="color:var(--accent-light);font-size:1rem;font-weight:600;">@Model.CompanyName</p>
+                    </div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                    <span class="badge @GetTypeBadge(Model.Type)" style="font-size:0.8rem;padding:0.35rem 0.85rem;">@Model.Type</span>
+                    <span class="badge @GetStatusBadge(Model.Status)" style="font-size:0.8rem;">@Model.Status</span>
+                </div>
+            </div>
+
+            <!-- Meta chips -->
+            <div style="display:flex;flex-wrap:wrap;gap:0.6rem;">
+                <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:999px;padding:0.35rem 0.85rem;font-size:0.82rem;color:var(--text-secondary);">
+                    📍 @Model.Location
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:999px;padding:0.35rem 0.85rem;font-size:0.82rem;color:var(--text-secondary);">
+                    💰 @Model.SalaryRange
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:999px;padding:0.35rem 0.85rem;font-size:0.82rem;color:var(--text-secondary);">
+                    📁 @Model.Category
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:999px;padding:0.35rem 0.85rem;font-size:0.82rem;color:var(--text-secondary);">
+                    👥 @Model.ApplicationCount applicants
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:999px;padding:0.35rem 0.85rem;font-size:0.82rem;color:var(--text-secondary);">
+                    📅 Posted @Model.PostedAt.ToString("MMMM dd, yyyy")
+                </span>
+            </div>
+        </div>
+
+        <!-- Description Card -->
+        <div class="card reveal reveal-delay-1">
+            <h2 style="font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin-bottom:1.25rem;display:flex;align-items:center;gap:8px;">
+                <span style="display:inline-block;width:16px;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:1px;"></span>
+                Job Description
+            </h2>
+            <div class="detail-prose">@Model.Description</div>
+        </div>
+    </div>
+
+    <!-- ── Sidebar ────────────────────────────────────────────── -->
+    <div class="sticky-sidebar">
+
+        <!-- Apply Box (Candidate) -->
+        @if (User.IsInRole("Candidate") && Model.Status == JobStatus.Open)
+        {
+            <div class="card reveal" style="margin-bottom:1.25rem;">
+                <h3 style="font-size:0.95rem;font-weight:800;margin-bottom:1rem;display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:1.2rem;">🚀</span> Apply for this Role
+                </h3>
+                @if (hasApplied)
+                {
+                    <div class="alert alert-success" style="margin:0;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+                        Application submitted!
+                    </div>
+                    <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.75rem;text-align:center;">
+                        Check your status in <a asp-controller="Applications" asp-action="MyApplications" style="color:var(--accent-light);">My Applications</a>
+                    </p>
+                }
+                else
+                {
+                    <form asp-controller="Applications" asp-action="Apply" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="jobId" value="@Model.Id" />
+                        
+                        <div class="form-group">
+                            <label class="form-label">Cover Letter</label>
+                            <textarea name="CoverLetter" class="form-control" rows="5"
+                                placeholder="Tell them why you're the perfect fit…" required></textarea>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(ViewBag.DefaultCvPath))
+                        {
+                            <div class="form-group" style="display:flex; align-items:center; gap:8px; margin-bottom:1.25rem; background:rgba(255,255,255,0.02); border:1px solid var(--border); padding:0.75rem 1rem; border-radius:12px;">
+                                <input type="checkbox" id="useProfileCv" name="UseProfileCv" value="true" checked style="width:16px; height:16px; cursor:pointer;" />
+                                <label for="useProfileCv" style="font-size:0.85rem; font-weight:700; cursor:pointer; color:var(--text-secondary); margin:0;">
+                                    Use my profile CV: <span style="color:var(--accent-light);">@ViewBag.DefaultCvFileName</span>
+                                </label>
+                            </div>
+                        }
+
+                        <div class="form-group" id="cvUploadWrapper" style="@(!string.IsNullOrEmpty(ViewBag.DefaultCvPath) ? "display:none;" : "")">
+                            <label class="form-label">📄 Upload CV (PDF or DOCX, max 1MB)</label>
+                            <input type="file" id="cvFile" name="CvFile" class="form-control" accept=".pdf,.docx" style="padding: 0.5rem;" @(string.IsNullOrEmpty(ViewBag.DefaultCvPath) ? "required" : "") />
+                            <div id="cv-error" class="field-validation-error" style="display: none; margin-top: 5px;"></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-full">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+                            Submit Application
+                        </button>
+                    </form>
+                }
+            </div>
+        }
+
+        @if (User.Identity?.IsAuthenticated != true)
+        {
+            <div class="card reveal" style="margin-bottom:1.25rem;text-align:center;padding:2rem;">
+                <div style="font-size:2.5rem;margin-bottom:0.75rem;">🔒</div>
+                <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:1rem;line-height:1.6;">Sign in as a <strong style="color:var(--text-secondary);">Candidate</strong> to apply to this position</p>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-full" style="margin-bottom:0.5rem;">Create Free Account</a>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-ghost btn-full btn-sm">Sign In</a>
+            </div>
+        }
+
+        <!-- Employer Controls -->
+        @if (User.IsInRole("Employer") && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.EmployerId)
+        {
+            <div class="card reveal" style="margin-bottom:1.25rem;">
+                <h3 style="font-size:0.9rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:1rem;">Manage Listing</h3>
+                <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                    <a asp-controller="Jobs" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-ghost btn-full">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        Edit Listing
+                    </a>
+                    <a asp-controller="Applications" asp-action="Applicants" asp-route-id="@Model.Id" class="btn btn-outline btn-full">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        View @Model.ApplicationCount Applicant@(Model.ApplicationCount != 1 ? "s" : "")
+                    </a>
+                    <form asp-controller="Jobs" asp-action="Delete" asp-route-id="@Model.Id" method="post"
+                          onsubmit="return confirm('Delete this job listing? This cannot be undone.');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger btn-full btn-sm">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2v2"/></svg>
+                            Delete Listing
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+
+        <!-- Company Card -->
+        <div class="card reveal reveal-delay-2">
+            <h3 style="font-size:0.9rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:1rem;">About the Company</h3>
+            <div class="meta-list">
+                <div class="meta-item">
+                    <span class="label">🏢 Company</span>
+                    <span class="value">@Model.CompanyName</span>
+                </div>
+                <div class="meta-item">
+                    <span class="label">✉️ Contact</span>
+                    <span class="value" style="font-size:0.78rem;color:var(--text-muted);">@Model.EmployerEmail</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetTypeBadge(JobBoard.Models.Entities.JobType t) => t switch {
+        JobBoard.Models.Entities.JobType.FullTime => "badge-green",
+        JobBoard.Models.Entities.JobType.Remote   => "badge-accent",
+        JobBoard.Models.Entities.JobType.PartTime => "badge-yellow",
+        JobBoard.Models.Entities.JobType.Contract => "badge-blue",
+        _ => "badge-gray"
+    };
+    string GetStatusBadge(JobBoard.Models.Entities.JobStatus s) => s switch {
+        JobBoard.Models.Entities.JobStatus.Open   => "badge-green",
+        JobBoard.Models.Entities.JobStatus.Paused => "badge-yellow",
+        JobBoard.Models.Entities.JobStatus.Closed => "badge-red",
+        _ => "badge-gray"
+    };
+    string GetEmoji(string cat) => cat?.ToLower() switch {
+        var c when c?.Contains("software") == true => "💻",
+        var c when c?.Contains("design") == true   => "🎨",
+        var c when c?.Contains("market") == true   => "📣",
+        var c when c?.Contains("finance") == true  => "📊",
+        _ => "🏢"
+    };
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const useProfileCvCheckbox = document.getElementById("useProfileCv");
+            const cvUploadWrapper = document.getElementById("cvUploadWrapper");
+            const fileInput = document.getElementById("cvFile");
+            const errorDiv = document.getElementById("cv-error");
+
+            if (useProfileCvCheckbox && cvUploadWrapper && fileInput) {
+                useProfileCvCheckbox.addEventListener("change", function() {
+                    if (this.checked) {
+                        cvUploadWrapper.style.display = "none";
+                        fileInput.removeAttribute("required");
+                        fileInput.value = "";
+                        errorDiv.style.display = "none";
+                    } else {
+                        cvUploadWrapper.style.display = "block";
+                        fileInput.setAttribute("required", "required");
+                    }
+                });
+            }
+            
+            if (fileInput) {
+                fileInput.addEventListener("change", function() {
+                    errorDiv.style.display = "none";
+                    errorDiv.textContent = "";
+                    
+                    if (this.files && this.files[0]) {
+                        const file = this.files[0];
+                        const extension = file.name.split('.').pop().toLowerCase();
+                        const size = file.size; // in bytes
+                        
+                        if (extension !== "pdf" && extension !== "docx") {
+                            errorDiv.innerHTML = "❌ Only PDF and DOCX files are allowed.";
+                            errorDiv.style.display = "flex";
+                            this.value = ""; // clear input
+                            return;
+                        }
+                        
+                        if (size > 1024 * 1024) {
+                            errorDiv.innerHTML = "❌ CV file size cannot exceed 1MB.";
+                            errorDiv.style.display = "flex";
+                            this.value = ""; // clear input
+                            return;
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}

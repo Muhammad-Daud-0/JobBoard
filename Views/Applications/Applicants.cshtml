@@ -1,0 +1,123 @@
+@model IEnumerable<JobBoard.Models.DTOs.Applications.ApplicationListDto>
+@using JobBoard.Models.Entities
+@{
+    ViewData["Title"] = "Applicants";
+    string jobTitle = ViewBag.JobTitle;
+    int jobId = ViewBag.JobId;
+}
+
+<div class="page-header reveal">
+    <div>
+        <h1>Applicants</h1>
+        <p class="page-subtitle">Reviewing candidates for <strong style="color:var(--accent-light);">@jobTitle</strong></p>
+    </div>
+    <a asp-controller="Jobs" asp-action="Details" asp-route-id="@jobId" class="btn btn-ghost btn-sm">← Back to Listing</a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="empty-state reveal">
+        <span class="empty-icon">👥</span>
+        <h3>No applicants yet</h3>
+        <p>Share your job listing to attract the right candidates</p>
+    </div>
+}
+else
+{
+    <div class="stats-grid reveal">
+        <div class="stat-card">
+            <span class="stat-value">@Model.Count()</span>
+            <span class="stat-label">Total Applicants</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value" style="-webkit-text-fill-color:var(--yellow);">@Model.Count(a => a.Status == ApplicationStatus.Pending)</span>
+            <span class="stat-label">Pending</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value" style="-webkit-text-fill-color:var(--green);">@Model.Count(a => a.Status == ApplicationStatus.Shortlisted)</span>
+            <span class="stat-label">Shortlisted</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value" style="-webkit-text-fill-color:var(--red);">@Model.Count(a => a.Status == ApplicationStatus.Rejected)</span>
+            <span class="stat-label">Rejected</span>
+        </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:1.25rem;">
+        @{int i = 0;}
+        @foreach (var app in Model)
+        {
+            i++;
+            <div class="applicant-card reveal" style="animation-delay:@(i * 0.08)s;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
+                    <div style="display:flex;align-items:center;gap:1rem;">
+                        <!-- Avatar -->
+                        <div style="width:48px;height:48px;border-radius:50%;
+                                    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+                                    display:flex;align-items:center;justify-content:center;
+                                    font-size:1.1rem;font-weight:800;color:#fff;flex-shrink:0;
+                                    box-shadow:var(--shadow-glow-sm);">
+                            @(app.CandidateName.Length > 0 ? app.CandidateName[0].ToString().ToUpper() : "?")
+                        </div>
+                        <div>
+                            <div style="font-weight:700;font-size:1rem;">@app.CandidateName</div>
+                            <div style="color:var(--text-muted);font-size:0.82rem;">@app.CandidateEmail</div>
+                            <div style="color:var(--text-muted);font-size:0.75rem;margin-top:2px;">Applied @app.AppliedAt.ToString("MMMM dd, yyyy")</div>
+                        </div>
+                    </div>
+                    <span class="badge @GetStatusBadge(app.Status)" style="font-size:0.8rem;padding:0.35rem 0.85rem;">
+                        @GetStatusIcon(app.Status) @app.Status
+                    </span>
+                </div>
+
+                <div class="cover-letter-box" style="margin-bottom:1rem;">
+                    <p style="margin-top:0.5rem;">@app.CoverLetter</p>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.25rem; flex-wrap:wrap;">
+                    @if (!string.IsNullOrEmpty(app.CvPath))
+                    {
+                        <a href="@app.CvPath" target="_blank" class="btn btn-outline btn-sm">
+                            📄 View CV
+                        </a>
+                    }
+                    <a asp-controller="Chat" asp-action="Index" asp-route-withUserId="@app.CandidateId" class="btn btn-ghost btn-sm">
+                        💬 Chat
+                    </a>
+                </div>
+
+                <form asp-controller="Applications" asp-action="UpdateStatus" method="post"
+                      style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id"    value="@app.Id" />
+                    <input type="hidden" name="jobId" value="@jobId"  />
+                    <label style="font-size:0.78rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap;">Update Status</label>
+                    <select name="status" class="form-control" style="max-width:200px;padding:0.5rem 0.85rem;">
+                        @foreach (var s in Enum.GetValues<ApplicationStatus>())
+                        {
+                            <option value="@s" selected="@(app.Status == s ? "selected" : null)">@s</option>
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                </form>
+            </div>
+        }
+    </div>
+}
+
+@functions {
+    string GetStatusBadge(JobBoard.Models.Entities.ApplicationStatus s) => s switch {
+        JobBoard.Models.Entities.ApplicationStatus.Pending    => "badge-yellow",
+        JobBoard.Models.Entities.ApplicationStatus.Reviewed   => "badge-blue",
+        JobBoard.Models.Entities.ApplicationStatus.Shortlisted=> "badge-green",
+        JobBoard.Models.Entities.ApplicationStatus.Rejected   => "badge-red",
+        _ => "badge-gray"
+    };
+    string GetStatusIcon(JobBoard.Models.Entities.ApplicationStatus s) => s switch {
+        JobBoard.Models.Entities.ApplicationStatus.Pending    => "⏳",
+        JobBoard.Models.Entities.ApplicationStatus.Reviewed   => "👀",
+        JobBoard.Models.Entities.ApplicationStatus.Shortlisted=> "⭐",
+        JobBoard.Models.Entities.ApplicationStatus.Rejected   => "✕",
+        _ => "•"
+    };
+}

@@ -1,0 +1,83 @@
+@model IEnumerable<JobBoard.Models.DTOs.Jobs.JobListDto>
+@using JobBoard.Models.Entities
+@{
+    ViewData["Title"] = "Admin — All Jobs";
+}
+
+<div class="page-header">
+    <div>
+        <h1>All Job Listings</h1>
+        <p class="page-subtitle">Platform-wide view of every job posted</p>
+    </div>
+    <a asp-controller="Admin" asp-action="Users" class="btn btn-ghost btn-sm">Manage Users</a>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">@Model.Count()</div>
+        <div class="stat-label">Total Listings</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color:var(--green);">@Model.Count(j => j.Status == JobStatus.Open)</div>
+        <div class="stat-label">Open</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color:var(--red);">@Model.Count(j => j.Status == JobStatus.Closed)</div>
+        <div class="stat-label">Closed</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color:var(--accent-light);">@Model.Sum(j => j.ApplicationCount)</div>
+        <div class="stat-label">Total Applications</div>
+    </div>
+</div>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Company</th>
+                <th>Category</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Applications</th>
+                <th>Posted</th>
+                <th>View</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var job in Model)
+            {
+                <tr>
+                    <td style="font-weight:600; max-width:200px; overflow:hidden; text-overflow:ellipsis;">@job.Title</td>
+                    <td style="color:var(--accent-light);">@job.CompanyName</td>
+                    <td style="color:var(--text-muted);">@job.Category</td>
+                    <td><span class="badge @GetTypeBadge(job.Type)">@job.Type</span></td>
+                    <td><span class="badge @GetStatusBadge(job.Status)">@job.Status</span></td>
+                    <td style="text-align:center;"><span class="badge badge-gray">@job.ApplicationCount</span></td>
+                    <td style="color:var(--text-muted); font-size:0.8rem;">@job.PostedAt.ToString("MMM dd, yyyy")</td>
+                    <td>
+                        <a asp-controller="Jobs" asp-action="Details" asp-route-id="@job.Id"
+                           class="btn btn-ghost btn-sm">View</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@functions {
+    string GetTypeBadge(JobBoard.Models.Entities.JobType t) => t switch {
+        JobBoard.Models.Entities.JobType.FullTime => "badge-green",
+        JobBoard.Models.Entities.JobType.Remote   => "badge-accent",
+        JobBoard.Models.Entities.JobType.PartTime => "badge-yellow",
+        JobBoard.Models.Entities.JobType.Contract => "badge-blue",
+        _ => "badge-gray"
+    };
+    string GetStatusBadge(JobBoard.Models.Entities.JobStatus s) => s switch {
+        JobBoard.Models.Entities.JobStatus.Open   => "badge-green",
+        JobBoard.Models.Entities.JobStatus.Paused => "badge-yellow",
+        JobBoard.Models.Entities.JobStatus.Closed => "badge-red",
+        _ => "badge-gray"
+    };
+}

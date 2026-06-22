@@ -1,0 +1,304 @@
+@model IEnumerable<JobBoard.Models.Entities.ChatMessage>
+@using JobBoard.Models.DTOs.Chat
+@using JobBoard.Models.Entities
+@{
+    ViewData["Title"] = "Messages";
+    var conversations = ViewBag.Conversations as IEnumerable<ChatConversationDto> ?? Enumerable.Empty<ChatConversationDto>();
+    string? currentUserId = ViewBag.CurrentUserId;
+    string? withUserId = ViewBag.WithUserId;
+}
+
+@Html.AntiForgeryToken()
+
+<div class="chat-layout reveal">
+    <!-- ── Conversation Sidebar ───────────────────────────────────── -->
+    <div class="chat-sidebar card">
+        <h3 style="font-size:1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:1.25rem;">
+            Conversations
+        </h3>
+        
+        <div class="conversations-list">
+            @if (!conversations.Any())
+            {
+                <div style="text-align:center; padding:2rem 1rem; color:var(--text-muted); font-size:0.85rem;">
+                    No active conversations. Start chatting from applications!
+                </div>
+            }
+            else
+            {
+                @foreach (var convo in conversations)
+                {
+                    bool isActive = convo.OtherUserId == withUserId;
+                    <a asp-controller="Chat" asp-action="Index" asp-route-withUserId="@convo.OtherUserId" 
+                       class="convo-item @(isActive ? "active" : "")">
+                        
+                        <!-- Avatar -->
+                        <div class="convo-avatar">
+                            @(convo.OtherUserName.Length > 0 ? convo.OtherUserName[0].ToString().ToUpper() : "?")
+                        </div>
+                        
+                        <div class="convo-info">
+                            <div style="display:flex; justify-content:space-between; align-items:baseline; gap:0.5rem;">
+                                <span class="convo-name">@convo.OtherUserName</span>
+                                <span class="convo-time">@FormatTime(convo.LastMessageTimestamp)</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; margin-top:2px;">
+                                <span class="convo-preview">@convo.LastMessageContent</span>
+                                @if (convo.HasUnread)
+                                {
+                                    <span class="unread-dot"></span>
+                                }
+                            </div>
+                        </div>
+                    </a>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- ── Chat Window ────────────────────────────────────────────── -->
+    <div class="chat-window card">
+        @if (string.IsNullOrEmpty(withUserId))
+        {
+            <div class="chat-empty">
+                <span style="font-size:3rem; margin-bottom:1rem; display:block;">💬</span>
+                <h3>Your Inbox</h3>
+                <p style="color:var(--text-muted); font-size:0.875rem; margin-top:0.4rem; max-width:280px; margin-left:auto; margin-right:auto;">
+                    Select an active conversation from the sidebar or message candidates/employers directly from application lists.
+                </p>
+            </div>
+        }
+        else
+        {
+            <!-- Chat Window Header -->
+            <div class="chat-header">
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <div class="convo-avatar" style="width:38px; height:38px; font-size:0.95rem;">
+                        @((ViewBag.OtherUserName as string ?? "?")[0].ToString().ToUpper())
+                    </div>
+                    <div>
+                        <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">@ViewBag.OtherUserName</div>
+                        <div style="color:var(--text-muted); font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">@ViewBag.OtherUserRole</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages Log -->
+            <div class="chat-messages" id="chatMessages">
+                @if (Model == null || !Model.Any())
+                {
+                    <div id="no-messages-prompt" style="text-align:center; padding:3rem 1rem; color:var(--text-muted); font-size:0.85rem;">
+                        No messages yet. Send a message to start the conversation!
+                    </div>
+                }
+                else
+                {
+                    @foreach (var msg in Model)
+                    {
+                        bool isMe = msg.SenderId == currentUserId;
+                        <div class="message-row @(isMe ? "me" : "them")" data-msg-id="@msg.Id">
+                            <div class="message-bubble">
+                                <div class="message-content">@msg.Content</div>
+                                <div class="message-time">
+                                    @msg.Timestamp.ToLocalTime().ToString("h:mm tt")
+                                    @if (isMe)
+                                    {
+                                        <span class="msg-status-check @(msg.IsRead ? "read" : "delivered")" data-check-id="@msg.Id">
+                                            ✓✓
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- Input Area -->
+            <form id="chatForm" class="chat-input-area" onsubmit="return handleMessageSubmit(event)">
+                <input type="hidden" id="receiverId" value="@withUserId" />
+                <input type="text" id="messageInput" class="form-control" placeholder="Type a message…" required autocomplete="off" />
+                <button type="submit" class="btn btn-primary" style="padding:0.7rem 1.4rem;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22,2 15,22 11,13 2,9"/>
+                    </svg>
+                    Send
+                </button>
+            </form>
+        }
+    </div>
+</div>
+
+@functions {
+    string FormatTime(DateTime dt)
+    {
+        var local = dt.ToLocalTime();
+        var diff = DateTime.Now - local;
+        if (diff.TotalDays < 1)
+        {
+            return local.ToString("h:mm tt");
+        }
+        if (diff.TotalDays < 2)
+        {
+            return "Yesterday";
+        }
+        return local.ToString("MMM dd");
+    }
+}
+
+@section Scripts {
+    @if (!string.IsNullOrEmpty(withUserId))
+    {
+        <script>
+            const chatMessages = document.getElementById("chatMessages");
+            const messageInput = document.getElementById("messageInput");
+            const receiverId = document.getElementById("receiverId").value;
+            const currentUserId = "@currentUserId";
+            let lastMessageCount = @(Model?.Count() ?? 0);
+
+            // Auto Scroll to Bottom on load
+            function scrollToBottom() {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            scrollToBottom();
+
+            // Submit message using AJAX
+            async function handleMessageSubmit(e) {
+                e.preventDefault();
+                const content = messageInput.value.trim();
+                if (!content) return false;
+
+                messageInput.value = "";
+
+                // Get validation token
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                // Append local message bubble immediately for springy responsiveness
+                appendMessageBubble(content, new Date(), true);
+                scrollToBottom();
+                
+                // Hide empty prompt
+                const prompt = document.getElementById("no-messages-prompt");
+                if (prompt) prompt.style.display = "none";
+
+                try {
+                    const formData = new FormData();
+                    formData.append("ReceiverId", receiverId);
+                    formData.append("Content", content);
+                    formData.append("__RequestVerificationToken", token);
+
+                    const response = await fetch("/Chat/SendMessage", {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        console.error("Failed to send message.");
+                    } else {
+                        const result = await response.json();
+                        // Update last message count to include the one we just sent
+                        lastMessageCount++;
+                    }
+                } catch (err) {
+                    console.error("Error sending message:", err);
+                }
+
+                return false;
+            }
+
+            // Append message bubble with checkmark support
+            function appendMessageBubble(content, date, isMe, msgId = null, isRead = false) {
+                const row = document.createElement("div");
+                row.className = `message-row ${isMe ? "me" : "them"} reveal-message`;
+                if (msgId) {
+                    row.setAttribute("data-msg-id", msgId);
+                }
+                
+                const bubble = document.createElement("div");
+                bubble.className = "message-bubble";
+                
+                const text = document.createElement("div");
+                text.className = "message-content";
+                text.textContent = content;
+                
+                const time = document.createElement("div");
+                time.className = "message-time";
+                
+                // Format simple time
+                let hours = date.getHours();
+                let minutes = date.getMinutes();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; // 0 should be 12
+                minutes = minutes < 10 ? '0'+minutes : minutes;
+                
+                time.textContent = `${hours}:${minutes} ${ampm} `;
+                
+                if (isMe) {
+                    const check = document.createElement("span");
+                    if (msgId) {
+                        check.className = `msg-status-check ${isRead ? "read" : "delivered"}`;
+                        check.setAttribute("data-check-id", msgId);
+                        check.textContent = " ✓✓";
+                    } else {
+                        check.className = "msg-status-check sent";
+                        check.textContent = " ✓";
+                    }
+                    time.appendChild(check);
+                }
+                
+                bubble.appendChild(text);
+                bubble.appendChild(time);
+                row.appendChild(bubble);
+                chatMessages.appendChild(row);
+            }
+
+            // Poll for new messages and status updates
+            async function pollMessages() {
+                try {
+                    const response = await fetch(`/Chat/GetMessages?withUserId=${receiverId}`);
+                    if (response.ok) {
+                        const messages = await response.json();
+                        
+                        messages.forEach(msg => {
+                            const existingRow = document.querySelector(`[data-msg-id="${msg.id}"]`);
+                            if (existingRow) {
+                                // If it exists, update checkmark for messages sent by me
+                                if (msg.senderId === currentUserId) {
+                                    const checkSpan = existingRow.querySelector(`[data-check-id="${msg.id}"]`);
+                                    if (checkSpan) {
+                                        checkSpan.className = `msg-status-check ${msg.isRead ? "read" : "delivered"}`;
+                                        checkSpan.textContent = " ✓✓";
+                                    }
+                                }
+                            } else {
+                                // If it doesn't exist, check if it's our sent message that was pending
+                                // (in case a locally appended message now gets its ID from database)
+                                if (msg.senderId !== currentUserId) {
+                                    appendMessageBubble(msg.content, new Date(msg.timestamp), false, msg.id, msg.isRead);
+                                } else {
+                                    // It's a message sent by me, but not in the DOM. Let's add it.
+                                    appendMessageBubble(msg.content, new Date(msg.timestamp), true, msg.id, msg.isRead);
+                                }
+                            }
+                        });
+                        
+                        if (messages.length > lastMessageCount) {
+                            lastMessageCount = messages.length;
+                            scrollToBottom();
+                            
+                            const prompt = document.getElementById("no-messages-prompt");
+                            if (prompt && messages.length > 0) prompt.style.display = "none";
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error polling messages:", err);
+                }
+            }
+
+            // Poll every 3 seconds
+            setInterval(pollMessages, 3000);
+        </script>
+    }
+}

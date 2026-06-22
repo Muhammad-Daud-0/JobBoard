@@ -1,0 +1,89 @@
+@{
+    ViewData["Title"] = "Contact Us";
+}
+
+<div class="page-header reveal">
+    <div>
+        <h1>@ViewData["Title"]</h1>
+        <p class="page-subtitle">Have a question or feedback? We'd love to hear from you.</p>
+    </div>
+</div>
+
+<div class="detail-grid reveal">
+    <!-- Contact Form Card -->
+    <div class="card" style="padding:2.25rem;">
+        <h2 style="font-size:1.15rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:1.5rem; display:flex; align-items:center; gap:8px;">
+            <span style="display:inline-block; width:16px; height:2px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); border-radius:1px;"></span>
+            Send us a Message
+        </h2>
+
+        <form asp-controller="Home" asp-action="Contact" method="post">
+            @Html.AntiForgeryToken()
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" name="name" class="form-control" placeholder="John Doe" required />
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="john@example.com" required />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Subject</label>
+                <input type="text" name="subject" class="form-control" placeholder="Inquiry about pricing/features" required />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Message</label>
+                <textarea name="message" class="form-control" rows="5" placeholder="Write your message here…" required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="margin-top:0.5rem; width:100%; justify-content:center;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+                Send Message
+            </button>
+        </form>
+    </div>
+
+    <!-- Contact Info Cards Sidebar -->
+    <div style="display:flex; flex-direction:column; gap:1.25rem;">
+        <!-- Contact Details card -->
+        <div class="card">
+            <h3 style="font-size:0.95rem; font-weight:800; margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted);">
+                Support Channels
+            </h3>
+            <div class="meta-list">
+                <div class="meta-item">
+                    <span class="label">✉️ Support Email</span>
+                    <span class="value" style="font-size:0.85rem;"><a href="mailto:support@jobboard.com" style="color:var(--accent-light); text-decoration:none;">support@jobboard.com</a></span>
+                </div>
+                <div class="meta-item">
+                    <span class="label">✉️ Sales Email</span>
+                    <span class="value" style="font-size:0.85rem;"><a href="mailto:sales@jobboard.com" style="color:var(--accent-light); text-decoration:none;">sales@jobboard.com</a></span>
+                </div>
+                <div class="meta-item">
+                    <span class="label">📞 Phone</span>
+                    <span class="value" style="font-size:0.85rem; color:var(--text-primary);">+1 (555) 019-2834</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Address Card -->
+        <div class="card">
+            <h3 style="font-size:0.95rem; font-weight:800; margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted);">
+                Headquarters
+            </h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:0.75rem;">
+                📍 100 Pine Street, Suite 2400<br/>
+                San Francisco, CA 94111<br/>
+                United States
+            </p>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block; border-top:1px solid var(--border); padding-top:0.75rem;">
+                ⏰ Hours: Mon-Fri, 9:00 AM - 6:00 PM PST
+            </span>
+        </div>
+    </div>
+</div>

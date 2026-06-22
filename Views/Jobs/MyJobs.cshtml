@@ -1,0 +1,115 @@
+@model IEnumerable<JobBoard.Models.DTOs.Jobs.JobListDto>
+@using JobBoard.Models.Entities
+@{
+    ViewData["Title"] = "My Listings";
+}
+
+<div class="page-header reveal">
+    <div>
+        <h1>My Listings</h1>
+        <p class="page-subtitle">Manage every job you've posted on JobBoard</p>
+    </div>
+    <a asp-controller="Jobs" asp-action="Create" class="btn btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Post New Job
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="empty-state reveal">
+        <span class="empty-icon">📋</span>
+        <h3>No listings yet</h3>
+        <p>Post your first job to start finding top candidates</p>
+        <a asp-controller="Jobs" asp-action="Create" class="btn btn-primary" style="margin-top:1.5rem;">Post a Job</a>
+    </div>
+}
+else
+{
+    <div class="stats-grid reveal">
+        <div class="stat-card">
+            <span class="stat-value">@Model.Count()</span>
+            <span class="stat-label">Total Listings</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value" style="-webkit-text-fill-color:var(--green);">@Model.Count(j => j.Status == JobStatus.Open)</span>
+            <span class="stat-label">Active</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value" style="-webkit-text-fill-color:var(--yellow);">@Model.Count(j => j.Status == JobStatus.Paused)</span>
+            <span class="stat-label">Paused</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">@Model.Sum(j => j.ApplicationCount)</span>
+            <span class="stat-label">Total Applications</span>
+        </div>
+    </div>
+
+    <div class="table-wrap reveal reveal-delay-1">
+        <table>
+            <thead>
+                <tr>
+                    <th>Job Title</th>
+                    <th>Category</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th style="text-align:center;">Applicants</th>
+                    <th>Posted</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var job in Model)
+                {
+                    <tr>
+                        <td>
+                            <a asp-controller="Jobs" asp-action="Details" asp-route-id="@job.Id"
+                               style="color:var(--text-primary);font-weight:700;text-decoration:none;
+                                      transition:color 0.2s;display:block;">
+                                @job.Title
+                                <span style="display:block;font-size:0.75rem;color:var(--text-muted);font-weight:400;margin-top:1px;">@job.Location</span>
+                            </a>
+                        </td>
+                        <td style="color:var(--text-muted);font-size:0.85rem;">@job.Category</td>
+                        <td><span class="badge @GetTypeBadge(job.Type)">@job.Type</span></td>
+                        <td><span class="badge @GetStatusBadge(job.Status)">@job.Status</span></td>
+                        <td style="text-align:center;">
+                            <a asp-controller="Applications" asp-action="Applicants" asp-route-id="@job.Id"
+                               class="badge badge-accent" style="text-decoration:none;">
+                                👥 @job.ApplicationCount
+                            </a>
+                        </td>
+                        <td style="color:var(--text-muted);font-size:0.8rem;">@job.PostedAt.ToString("MMM dd, yyyy")</td>
+                        <td>
+                            <div style="display:flex;gap:0.4rem;">
+                                <a asp-controller="Jobs" asp-action="Edit" asp-route-id="@job.Id"
+                                   class="btn btn-ghost btn-sm" data-tooltip="Edit">✏️</a>
+                                <form asp-controller="Jobs" asp-action="Delete" asp-route-id="@job.Id" method="post"
+                                      onsubmit="return confirm('Delete \'@job.Title\'? This cannot be undone.');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-danger btn-sm" data-tooltip="Delete">🗑</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@functions {
+    string GetTypeBadge(JobBoard.Models.Entities.JobType t) => t switch {
+        JobBoard.Models.Entities.JobType.FullTime => "badge-green",
+        JobBoard.Models.Entities.JobType.Remote   => "badge-accent",
+        JobBoard.Models.Entities.JobType.PartTime => "badge-yellow",
+        JobBoard.Models.Entities.JobType.Contract => "badge-blue",
+        _ => "badge-gray"
+    };
+    string GetStatusBadge(JobBoard.Models.Entities.JobStatus s) => s switch {
+        JobBoard.Models.Entities.JobStatus.Open   => "badge-green",
+        JobBoard.Models.Entities.JobStatus.Paused => "badge-yellow",
+        JobBoard.Models.Entities.JobStatus.Closed => "badge-red",
+        _ => "badge-gray"
+    };
+}

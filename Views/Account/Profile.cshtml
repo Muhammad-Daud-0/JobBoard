@@ -1,0 +1,766 @@
+@model JobBoard.Models.DTOs.Account.UpdateProfileDto
+@using JobBoard.Models.DTOs.Account
+@{
+    ViewData["Title"] = "My Profile";
+    string role = ViewBag.Role;
+    var changePassword = ViewBag.ChangePasswordDto as ChangePasswordDto ?? new ChangePasswordDto();
+}
+
+<style>
+    /* Tabs Navigation styling */
+    .profile-tabs-nav {
+        display: flex;
+        gap: 0.75rem;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.75rem;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+    }
+
+    .tab-btn {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        padding: 0.65rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.88rem;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+        background: rgba(255, 255, 255, 0.07);
+        color: var(--text-primary);
+        border-color: var(--border-accent);
+        transform: translateY(-2px);
+    }
+
+    .tab-btn.active {
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #fff;
+        border-color: transparent;
+        box-shadow: var(--shadow-glow-sm);
+    }
+
+    /* Tab Content Pane */
+    .tab-pane {
+        display: none;
+        animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    /* Skills Badges Grid */
+    .skills-flex {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .skill-pill {
+        background: rgba(99, 102, 241, 0.12);
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        color: var(--accent-light);
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        transition: all 0.2s ease;
+    }
+
+    .skill-pill:hover {
+        background: rgba(99, 102, 241, 0.25);
+        transform: scale(1.05);
+        box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
+    }
+
+    /* Resume Download / Delete Card */
+    .resume-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .resume-card:hover {
+        border-color: var(--border-accent);
+    }
+
+    .resume-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .resume-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="page-header reveal">
+    <div>
+        <h1>My Profile</h1>
+        <p class="page-subtitle">Manage your personal account details, credentials, and track your platform activity</p>
+    </div>
+</div>
+
+<div class="profile-tabs-nav reveal">
+    <button class="tab-btn active" data-target="#tab-overview">
+        <span>👁️</span> Overview
+    </button>
+    <button class="tab-btn" data-target="#tab-edit">
+        <span>✏️</span> Edit Details
+    </button>
+    @if (User.IsInRole("Candidate"))
+    {
+        <button class="tab-btn" data-target="#tab-resume">
+            <span>📄</span> Resume / CV
+        </button>
+    }
+    <button class="tab-btn" data-target="#tab-security">
+        <span>🔑</span> Security
+    </button>
+</div>
+
+<div class="detail-grid reveal">
+    <!-- ── Left Column: Active Tab Content ─────────────────────────── -->
+    <div>
+        
+        <!-- OVERVIEW TAB -->
+        <div id="tab-overview" class="tab-pane active">
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h2 style="font-size:1.15rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:1.25rem; display:flex; align-items:center; gap:8px;">
+                    <span style="display:inline-block; width:16px; height:2px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); border-radius:1px;"></span>
+                    Profile Summary
+                </h2>
+                
+                <div style="margin-bottom: 1.5rem;" class="meta-list">
+                    <div class="meta-item">
+                        <span class="label">📍 Location Address</span>
+                        <span class="value">@(string.IsNullOrEmpty(Model.Address) ? "No address added" : Model.Address)</span>
+                    </div>
+                </div>
+
+                @if (User.IsInRole("Candidate"))
+                {
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">About Me</h4>
+                        @if (!string.IsNullOrEmpty(Model.Bio))
+                        {
+                            <p style="color: var(--text-secondary); line-height: 1.6; margin-top: 0.35rem; white-space: pre-line;">@Model.Bio</p>
+                        }
+                        else
+                        {
+                            <p style="color: var(--text-muted); font-style: italic; margin-top: 0.35rem;">No biography added yet. Update your details to write a summary of your experience.</p>
+                        }
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Skills & Expertises</h4>
+                        @if (!string.IsNullOrEmpty(Model.Skills))
+                        {
+                            <div class="skills-flex">
+                                @foreach (var skill in Model.Skills.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    <span class="skill-pill">@skill.Trim()</span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p style="color: var(--text-muted); font-style: italic; margin-top: 0.35rem;">No skills listed yet. Add skills to help employers find your profile.</p>
+                        }
+                    </div>
+
+                    <div>
+                        <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">Primary Resume</h4>
+                        @if (!string.IsNullOrEmpty(Model.CvPath))
+                        {
+                            <div class="resume-card" style="margin-top:0.25rem;">
+                                <div class="resume-info">
+                                    <div class="resume-icon">📄</div>
+                                    <div>
+                                        <div style="font-size:0.88rem; font-weight:700; color:var(--text-primary);">@Model.CvFileName</div>
+                                        <div style="font-size:0.75rem; color:var(--text-muted);">Default CV selected for job applications</div>
+                                    </div>
+                                </div>
+                                <a href="@Model.CvPath" target="_blank" class="btn btn-ghost btn-sm" style="flex-shrink:0;">
+                                    Download
+                                </a>
+                            </div>
+                        }
+                        else
+                        {
+                            <div style="background:rgba(255,255,255,0.01); border:1px dashed var(--border); border-radius:12px; padding:1.25rem; text-align:center; color:var(--text-muted); font-size:0.85rem;">
+                                ⚠️ No default CV uploaded. You will need to upload a CV file every time you apply for a job.
+                                <br/>
+                                <a href="#" onclick="switchTab('#tab-resume'); return false;" style="color:var(--accent-light); font-weight:700; display:inline-block; margin-top:0.5rem;">Upload Resume Now</a>
+                            </div>
+                        }
+                    </div>
+                }
+                else if (User.IsInRole("Employer"))
+                {
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Company Description</h4>
+                        @if (!string.IsNullOrEmpty(Model.CompanyDescription))
+                        {
+                            <p style="color: var(--text-secondary); line-height: 1.6; margin-top: 0.35rem; white-space: pre-line;">@Model.CompanyDescription</p>
+                        }
+                        else
+                        {
+                            <p style="color: var(--text-muted); font-style: italic; margin-top: 0.35rem;">No company description added. Update your details to describe your business.</p>
+                        }
+                    </div>
+
+                    <div class="meta-list" style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.25rem;">
+                        <div class="meta-item">
+                            <span class="label">🏢 Company Location</span>
+                            <span class="value">@(string.IsNullOrEmpty(Model.Location) ? "Not specified" : Model.Location)</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="label">🌐 Website</span>
+                            <span class="value">
+                                @if (!string.IsNullOrEmpty(Model.WebsiteUrl))
+                                {
+                                    <a href="@(Model.WebsiteUrl.StartsWith("http") ? Model.WebsiteUrl : "https://" + Model.WebsiteUrl)" target="_blank" style="color: var(--accent-light); font-weight: 700;">
+                                        @Model.WebsiteUrl ↗
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span style="color: var(--text-muted); font-style: italic;">Not specified</span>
+                                }
+                            </span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p style="color:var(--text-secondary);">Welcome to your job board admin profile control room.</p>
+                }
+            </div>
+        </div>
+
+        <!-- EDIT PROFILE TAB -->
+        <div id="tab-edit" class="tab-pane">
+            <div class="card">
+                <h2 style="font-size:1.15rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:1.5rem; display:flex; align-items:center; gap:8px;">
+                    <span style="display:inline-block; width:16px; height:2px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); border-radius:1px;"></span>
+                    Update Account Details
+                </h2>
+
+                <form asp-controller="Account" asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Profile Image Upload (at top of edit form) -->
+                    <div class="form-group" style="display:flex; align-items:center; gap:1.25rem; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:14px; padding:1rem 1.25rem; margin-bottom:1.25rem;">
+                        <div style="flex-shrink:0;">
+                            @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
+                            {
+                                <img src="@Model.ProfileImageUrl" alt="Current avatar"
+                                     id="avatarPreview"
+                                     style="width:64px; height:64px; border-radius:50%; object-fit:cover; border:2px solid var(--border-accent);" />
+                            }
+                            else
+                            {
+                                <div id="avatarPreview"
+                                     style="width:64px; height:64px; border-radius:50%;
+                                            background:linear-gradient(135deg,var(--accent),var(--accent-2));
+                                            display:flex; align-items:center; justify-content:center;
+                                            font-size:1.6rem; font-weight:800; color:#fff; border:2px solid var(--border-accent);">
+                                    @(Model.FullName?.Length > 0 ? Model.FullName[0].ToString().ToUpper() : "?")
+                                </div>
+                            }
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:0.85rem; font-weight:700; color:var(--text-primary); margin-bottom:4px;">📷 Profile Photo</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem;">JPG, JPEG or PNG · Max 1MB</div>
+                            <label for="profileImageFile" class="btn btn-ghost btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px; padding:0.3rem 0.75rem; font-size:0.78rem;">
+                                Choose File
+                            </label>
+                            <input type="file" id="profileImageFile" name="ProfileImageFile" accept=".jpg,.jpeg,.png"
+                                   style="display:none;" />
+                            <div id="avatar-error" class="field-validation-error" style="display: none; margin-top: 5px;"></div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" class="form-grid-2">
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">Full Name</label>
+                            <input asp-for="FullName" class="form-control" placeholder="Your Name" />
+                            <span asp-validation-for="FullName" class="field-validation-error"></span>
+                        </div>
+
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">🏷️ Username <small style="color:var(--text-muted);font-weight:400;">(unique)</small></label>
+                            <input asp-for="UserName" class="form-control" placeholder="e.g. johndoe" autocomplete="username" />
+                            <span asp-validation-for="UserName" class="field-validation-error"></span>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" class="form-grid-2">
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">✉️ Email Address <small style="color:var(--text-muted);font-weight:400;">(can change)</small></label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="email@example.com" autocomplete="email" />
+                            <span asp-validation-for="Email" class="field-validation-error"></span>
+                        </div>
+
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">Phone Number</label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="+1 (555) 000-0000" />
+                            <span asp-validation-for="PhoneNumber" class="field-validation-error"></span>
+                        </div>
+
+                        <div class="form-group" style="margin: 0; grid-column: 1 / -1;">
+                            <label class="form-label">📍 Home / Office Address</label>
+                            <input asp-for="Address" class="form-control" placeholder="City, Country" />
+                            <span asp-validation-for="Address" class="field-validation-error"></span>
+                        </div>
+                    </div>
+
+                    @if (User.IsInRole("Candidate"))
+                    {
+                        <div class="form-group">
+                            <label class="form-label">Professional Biography</label>
+                            <textarea asp-for="Bio" class="form-control" rows="5" placeholder="Brief overview of your professional career, expertise, and interests..."></textarea>
+                            <span asp-validation-for="Bio" class="field-validation-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Key Skills (comma-separated)</label>
+                            <input asp-for="Skills" class="form-control" placeholder="e.g. C#, SQL, ASP.NET, JavaScript, Project Management" />
+                            <span asp-validation-for="Skills" class="field-validation-error"></span>
+                            <small style="color:var(--text-muted); display:block; margin-top:4px;">Separate each skill tag with a comma.</small>
+                        </div>
+                    }
+                    else if (User.IsInRole("Employer"))
+                    {
+                        <div class="form-group">
+                            <label class="form-label">Company Name</label>
+                            <input asp-for="CompanyName" class="form-control" placeholder="Acme Corp" />
+                            <span asp-validation-for="CompanyName" class="field-validation-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Company Description</label>
+                            <textarea asp-for="CompanyDescription" class="form-control" rows="5" placeholder="Tell candidates about your company size, culture, mission, and products..."></textarea>
+                            <span asp-validation-for="CompanyDescription" class="field-validation-error"></span>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Website URL</label>
+                                <input asp-for="WebsiteUrl" class="form-control" placeholder="www.acme.com" />
+                                <span asp-validation-for="WebsiteUrl" class="field-validation-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Headquarters Location</label>
+                                <input asp-for="Location" class="form-control" placeholder="New York, NY" />
+                                <span asp-validation-for="Location" class="field-validation-error"></span>
+                            </div>
+                        </div>
+                    }
+
+                    <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:1rem;">
+                        Save Profile Details
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        @if (User.IsInRole("Candidate"))
+        {
+            <!-- RESUME TAB -->
+            <div id="tab-resume" class="tab-pane">
+                <div class="card" style="margin-bottom:1.5rem;">
+                    <h2 style="font-size:1.15rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:1.5rem; display:flex; align-items:center; gap:8px;">
+                        <span style="display:inline-block; width:16px; height:2px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); border-radius:1px;"></span>
+                        Primary Resume (CV)
+                    </h2>
+
+                    @if (!string.IsNullOrEmpty(Model.CvPath))
+                    {
+                        <div style="margin-bottom:1.5rem;">
+                            <p style="color:var(--text-secondary); margin-bottom:0.75rem;">Your current default resume is successfully uploaded:</p>
+                            <div class="resume-card">
+                                <div class="resume-info">
+                                    <div class="resume-icon" style="background:rgba(239, 68, 68, 0.15); border-color:rgba(239, 68, 68, 0.3);">📄</div>
+                                    <div>
+                                        <div style="font-size:0.88rem; font-weight:700; color:var(--text-primary);">@Model.CvFileName</div>
+                                        <div style="font-size:0.75rem; color:var(--text-muted);">Uploaded CV. Will be selected by default when applying for new jobs.</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:0.5rem;">
+                                    <a href="@Model.CvPath" target="_blank" class="btn btn-outline btn-sm">
+                                        Download
+                                    </a>
+                                    <form asp-controller="Account" asp-action="DeleteDefaultCv" method="post" onsubmit="return confirm('Remove your default resume? You will need to upload a file manual when applying.');" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-danger btn-sm" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:var(--red);">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div style="border-top:1px solid var(--border); padding-top:1.5rem;">
+                        <h3 style="font-size:0.95rem; font-weight:800; color:var(--text-primary); margin-bottom:0.5rem;">
+                            @(string.IsNullOrEmpty(Model.CvPath) ? "Upload Default Resume" : "Replace Default Resume")
+                        </h3>
+                        <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:1rem; line-height:1.5;">
+                            Upload a default CV file (PDF or DOCX, max 1MB) so you can apply to job listings instantly with a single click.
+                        </p>
+
+                        <form asp-controller="Account" asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <!-- Keep required details -->
+                            <input type="hidden" asp-for="FullName" />
+                            <input type="hidden" asp-for="Email" />
+                            <input type="hidden" asp-for="PhoneNumber" />
+                            <input type="hidden" asp-for="Address" />
+                            <input type="hidden" asp-for="Bio" />
+                            <input type="hidden" asp-for="Skills" />
+
+                            <div class="form-group">
+                                <label class="form-label">Select File (PDF, DOCX)</label>
+                                <input type="file" id="cvFileProfile" name="CvFile" class="form-control" accept=".pdf,.docx" required style="padding: 0.5rem;" />
+                                <div id="cv-profile-error" class="field-validation-error" style="display: none; margin-top: 5px;"></div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="margin-top:0.5rem;">
+                                📤 Upload CV File
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- SECURITY TAB -->
+        <div id="tab-security" class="tab-pane">
+            <div class="card">
+                <h2 style="font-size:1.15rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); margin-bottom:1.5rem; display:flex; align-items:center; gap:8px;">
+                    <span style="display:inline-block; width:16px; height:2px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); border-radius:1px;"></span>
+                    Update Password
+                </h2>
+
+                <form asp-controller="Account" asp-action="ChangePassword" method="post">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="form-group">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" name="CurrentPassword" class="form-control" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">New Password</label>
+                        <input type="password" name="NewPassword" class="form-control" placeholder="Min. 8 characters with symbols" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" name="ConfirmPassword" class="form-control" required />
+                    </div>
+
+                    <button type="submit" class="btn btn-outline" style="width:100%; justify-content:center; margin-top:0.5rem;">
+                        Update Security Password
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── Right Column: Info & Stats ──────────────────────────────── -->
+    <div style="display:flex; flex-direction:column; gap:1.25rem;">
+        
+        <!-- Summary card -->
+        <div class="card" style="text-align:center; padding:2rem 1.5rem;">
+            <!-- Avatar / Profile Image -->
+            <div style="position:relative; width:96px; height:96px; margin:0 auto 0.75rem;">
+                @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
+                {
+                    <img src="@Model.ProfileImageUrl" alt="Avatar"
+                         style="width:96px; height:96px; border-radius:50%; object-fit:cover;
+                                border:3px solid var(--border-accent); box-shadow:var(--shadow-glow-sm);" />
+                }
+                else
+                {
+                    <div style="width:96px; height:96px; border-radius:50%;
+                                background:linear-gradient(135deg,var(--accent),var(--accent-2));
+                                display:flex; align-items:center; justify-content:center;
+                                font-size:2.4rem; font-weight:800; color:#fff;
+                                box-shadow:var(--shadow-glow-sm); border:3px solid var(--border-accent);">
+                        @(Model.FullName?.Length > 0 ? Model.FullName[0].ToString().ToUpper() : "?")
+                    </div>
+                }
+                <!-- Camera overlay button to change avatar -->
+                <button onclick="switchTab('#tab-edit'); document.getElementById('profileImageFile').click();"
+                        title="Change profile photo"
+                        style="position:absolute; bottom:0; right:0; width:28px; height:28px;
+                               border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent-2));
+                               border:2px solid var(--bg-card); color:#fff; cursor:pointer;
+                               display:flex; align-items:center; justify-content:center; font-size:0.75rem;
+                               box-shadow:0 2px 8px rgba(99,102,241,0.4); transition:all 0.2s;" type="button">
+                    📷
+                </button>
+            </div>
+
+            <!-- Remove Avatar Button -->
+            @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
+            {
+                <form asp-controller="Account" asp-action="DeleteProfileImage" method="post" style="margin-bottom:0.65rem;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-ghost btn-sm"
+                            style="color:var(--red); font-size:0.7rem; padding:0.2rem 0.6rem;
+                                   border:1px solid rgba(239,68,68,0.2); border-radius:6px;
+                                   background:rgba(239,68,68,0.05);">
+                        Remove Photo
+                    </button>
+                </form>
+            }
+
+            <h3 style="font-size:1.2rem; font-weight:800; color:var(--text-primary); margin-bottom:2px;">@Model.FullName</h3>
+            <p style="font-size:0.85rem; color:var(--accent-light); font-weight:700; margin-bottom:0.15rem; letter-spacing:0.01em;">@@@(Model.UserName ?? User.Identity?.Name)</p>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:1rem;">@Model.Email</p>
+
+            <span class="badge @(role == "Employer" ? "badge-accent" : role == "Admin" ? "badge-red" : "badge-green")" style="font-size:0.75rem; padding:0.35rem 0.95rem; margin-bottom:1.5rem;">
+                👤 @role
+            </span>
+
+            <div style="border-top:1px solid var(--border); padding-top:1.25rem; text-align:left;" class="meta-list">
+                <div class="meta-item">
+                    <span class="label">🏷️ Username</span>
+                    <span class="value" style="font-size:0.8rem; color:var(--accent-light);">@@@(Model.UserName ?? User.Identity?.Name)</span>
+                </div>
+                <div class="meta-item">
+                    <span class="label">✉️ Email</span>
+                    <span class="value" style="font-size:0.8rem;">@Model.Email</span>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Address))
+                {
+                    <div class="meta-item">
+                        <span class="label">📍 Address</span>
+                        <span class="value" style="font-size:0.8rem;">@Model.Address</span>
+                    </div>
+                }
+                @if (User.IsInRole("Employer"))
+                {
+                    <div class="meta-item">
+                        <span class="label">🏢 Company</span>
+                        <span class="value">@Model.CompanyName</span>
+                    </div>
+                }
+                <div class="meta-item">
+                    <span class="label">✅ Status</span>
+                    <span class="value" style="color:var(--green);">Verified</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Stats Card -->
+        @if (User.IsInRole("Candidate"))
+        {
+            <div class="card">
+                <h3 style="font-size:0.9rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); margin-bottom:1.25rem;">
+                    Platform Activity
+                </h3>
+                <div class="meta-list">
+                    <div class="meta-item">
+                        <span class="label">📄 Applications Sent</span>
+                        <span class="value">@ViewBag.TotalApplications</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="label">⏳ Pending Review</span>
+                        <span class="value" style="color:var(--yellow);">@ViewBag.PendingApplications</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="label">⭐ Shortlisted Applications</span>
+                        <span class="value" style="color:var(--green);">@ViewBag.ShortlistedApplications</span>
+                    </div>
+                </div>
+                <a asp-controller="Applications" asp-action="MyApplications" class="btn btn-ghost btn-sm btn-full" style="margin-top:1rem;">
+                    View My Applications
+                </a>
+            </div>
+        }
+        else if (User.IsInRole("Employer"))
+        {
+            <div class="card">
+                <h3 style="font-size:0.9rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted); margin-bottom:1.25rem;">
+                    Listing Activity
+                </h3>
+                <div class="meta-list">
+                    <div class="meta-item">
+                        <span class="label">📁 Total Jobs Posted</span>
+                        <span class="value">@ViewBag.TotalJobs</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="label">🟢 Active Listings</span>
+                        <span class="value" style="color:var(--green);">@ViewBag.ActiveJobs</span>
+                    </div>
+                </div>
+                <a asp-controller="Jobs" asp-action="MyJobs" class="btn btn-ghost btn-sm btn-full" style="margin-top:1rem;">
+                    Manage Job Listings
+                </a>
+            </div>
+        }
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Setup active tab from localStorage or default
+            const tabButtons = document.querySelectorAll(".tab-btn");
+            const tabPanes = document.querySelectorAll(".tab-pane");
+
+            function switchTab(targetId) {
+                // Remove active classes
+                tabButtons.forEach(btn => btn.classList.remove("active"));
+                tabPanes.forEach(pane => pane.classList.remove("active"));
+
+                // Find active button
+                const btn = document.querySelector(`.tab-btn[data-target="${targetId}"]`);
+                if (btn) btn.classList.add("active");
+
+                const pane = document.querySelector(targetId);
+                if (pane) pane.classList.add("active");
+
+                // Save state
+                localStorage.setItem("profile_active_tab", targetId);
+            }
+
+            tabButtons.forEach(btn => {
+                btn.addEventListener("click", function() {
+                    const target = this.getAttribute("data-target");
+                    switchTab(target);
+                });
+            });
+
+            // Initial load
+            const savedTab = localStorage.getItem("profile_active_tab");
+            if (savedTab && document.querySelector(savedTab)) {
+                switchTab(savedTab);
+            }
+
+            // Expose globally for tab link shortcuts
+            window.switchTab = switchTab;
+
+            // Client side validation for CV file profile upload
+            const fileInput = document.getElementById("cvFileProfile");
+            const cvErrorDiv = document.getElementById("cv-profile-error");
+            
+            if (fileInput) {
+                fileInput.addEventListener("change", function() {
+                    cvErrorDiv.style.display = "none";
+                    cvErrorDiv.textContent = "";
+                    
+                    if (this.files && this.files[0]) {
+                        const file = this.files[0];
+                        const extension = file.name.split('.').pop().toLowerCase();
+                        const size = file.size; // in bytes
+                        
+                        if (extension !== "pdf" && extension !== "docx") {
+                            cvErrorDiv.innerHTML = "❌ Only PDF and DOCX files are allowed.";
+                            cvErrorDiv.style.display = "flex";
+                            this.value = ""; // clear input
+                            return;
+                        }
+                        
+                        if (size > 1024 * 1024) {
+                            cvErrorDiv.innerHTML = "❌ CV file size cannot exceed 1MB.";
+                            cvErrorDiv.style.display = "flex";
+                            this.value = ""; // clear input
+                            return;
+                        }
+                    }
+                });
+            }
+
+            // Client side validation + live preview for Profile Image upload
+            const imgInput = document.getElementById("profileImageFile");
+            const imgErrorDiv = document.getElementById("avatar-error");
+
+            if (imgInput) {
+                imgInput.addEventListener("change", function() {
+                    imgErrorDiv.style.display = "none";
+                    imgErrorDiv.textContent = "";
+
+                    if (this.files && this.files[0]) {
+                        const file = this.files[0];
+                        const extension = file.name.split('.').pop().toLowerCase();
+                        const size = file.size; // in bytes
+
+                        if (extension !== "jpg" && extension !== "jpeg" && extension !== "png") {
+                            imgErrorDiv.innerHTML = "❌ Only JPG, JPEG, and PNG images are allowed.";
+                            imgErrorDiv.style.display = "flex";
+                            this.value = ""; // clear input
+                            return;
+                        }
+
+                        if (size > 1024 * 1024) {
+                            imgErrorDiv.innerHTML = "❌ Image size cannot exceed 1MB.";
+                            imgErrorDiv.style.display = "flex";
+                            this.value = ""; // clear input
+                            return;
+                        }
+
+                        // Live preview: replace the avatarPreview element with an <img>
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const preview = document.getElementById("avatarPreview");
+                            if (preview) {
+                                // Replace with img if it was a div (initials avatar)
+                                if (preview.tagName === "DIV") {
+                                    const img = document.createElement("img");
+                                    img.id = "avatarPreview";
+                                    img.alt = "New avatar preview";
+                                    img.style.cssText = "width:64px; height:64px; border-radius:50%; object-fit:cover; border:2px solid var(--border-accent);";
+                                    img.src = e.target.result;
+                                    preview.parentNode.replaceChild(img, preview);
+                                } else {
+                                    preview.src = e.target.result;
+                                }
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        });
+    </script>
+}

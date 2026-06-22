@@ -1,0 +1,73 @@
+@model JobBoard.Models.DTOs.Jobs.CreateJobDto
+@using JobBoard.Models.Entities
+@{
+    ViewData["Title"] = "Post a Job";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Post a New Job</h1>
+        <p class="page-subtitle">Fill in the details below to attract the best candidates</p>
+    </div>
+    <a asp-controller="Jobs" asp-action="MyJobs" class="btn btn-ghost btn-sm">← My Listings</a>
+</div>
+
+<div style="max-width:700px;">
+    <div class="card">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="All" class="validation-summary-errors" style="display:@(ViewData.ModelState.ErrorCount > 0 ? "block" : "none")"></div>
+
+            <div class="form-group">
+                <label class="form-label" asp-for="Title">Job Title *</label>
+                <input asp-for="Title" class="form-control" placeholder="e.g. Senior Software Engineer" />
+                <span asp-validation-for="Title" class="field-validation-error"></span>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div class="form-group">
+                    <label class="form-label" asp-for="Location">Location *</label>
+                    <input asp-for="Location" class="form-control" placeholder="e.g. Karachi, Pakistan" />
+                    <span asp-validation-for="Location" class="field-validation-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" asp-for="SalaryRange">Salary Range *</label>
+                    <input asp-for="SalaryRange" class="form-control" placeholder="e.g. $60k – $80k" />
+                    <span asp-validation-for="SalaryRange" class="field-validation-error"></span>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div class="form-group">
+                    <label class="form-label" asp-for="Type">Job Type *</label>
+                    <select asp-for="Type" class="form-control"
+                            asp-items="Html.GetEnumSelectList<JobType>()"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" asp-for="CategoryId">Category *</label>
+                    <select asp-for="CategoryId" class="form-control"
+                            asp-items="ViewBag.Categories as Microsoft.AspNetCore.Mvc.Rendering.SelectList">
+                        <option value="0">-- Select Category --</option>
+                    </select>
+                    <span asp-validation-for="CategoryId" class="field-validation-error"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" asp-for="Description">Job Description * <span style="color:var(--text-muted); font-weight:400;">(min. 50 characters)</span></label>
+                <textarea asp-for="Description" class="form-control" rows="10"
+                          placeholder="Describe the role, responsibilities, requirements, and what you offer…"></textarea>
+                <span asp-validation-for="Description" class="field-validation-error"></span>
+            </div>
+
+            <div style="display:flex; gap:0.75rem; justify-content:flex-end; margin-top:0.5rem;">
+                <a asp-action="MyJobs" class="btn btn-ghost">Cancel</a>
+                <button type="submit" class="btn btn-primary">🚀 Post Job</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScripts" />
+}

@@ -1,0 +1,84 @@
+@model IEnumerable<object>
+@{
+    ViewData["Title"] = "Admin — Users";
+    var users = Model.Select(u => (dynamic)u).ToList();
+}
+
+<div class="page-header">
+    <div>
+        <h1>User Management</h1>
+        <p class="page-subtitle">All registered users on the platform</p>
+    </div>
+    <a asp-controller="Admin" asp-action="Jobs" class="btn btn-ghost btn-sm">View All Jobs</a>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">@users.Count</div>
+        <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color:var(--green);">@users.Count(u => ((IEnumerable<string>)u.Roles).Contains("Employer"))</div>
+        <div class="stat-label">Employers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color:var(--accent-light);">@users.Count(u => ((IEnumerable<string>)u.Roles).Contains("Candidate"))</div>
+        <div class="stat-label">Candidates</div>
+    </div>
+</div>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Company</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in users)
+            {
+                var roles = (IEnumerable<string>)user.Roles;
+                <tr>
+                    <td style="font-weight:600;">@user.FullName</td>
+                    <td style="color:var(--text-muted); font-size:0.85rem;">@user.Email</td>
+                    <td style="color:var(--text-muted);">@(user.CompanyName ?? "—")</td>
+                    <td>
+                        @foreach (var role in roles)
+                        {
+                            <span class="badge @GetRoleBadge(role)" style="margin-right:3px;">@role</span>
+                        }
+                    </td>
+                    <td style="color:var(--text-muted); font-size:0.8rem;">@((DateTime)user.CreatedAt).ToString("MMM dd, yyyy")</td>
+                    <td>
+                        @if (!roles.Contains("Admin"))
+                        {
+                            <form asp-controller="Admin" asp-action="DeleteUser" asp-route-id="@user.Id" method="post"
+                                  onsubmit="return confirm('Permanently delete this user and all their data?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span style="color:var(--text-muted); font-size:0.8rem;">Protected</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@functions {
+    string GetRoleBadge(string role) => role switch {
+        "Admin"     => "badge-red",
+        "Employer"  => "badge-green",
+        "Candidate" => "badge-accent",
+        _ => "badge-gray"
+    };
+}

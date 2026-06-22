@@ -1,0 +1,186 @@
+@model JobBoard.Models.DTOs.Jobs.PagedResult<JobBoard.Models.DTOs.Jobs.JobListDto>
+@using JobBoard.Models.Entities
+@{
+    ViewData["Title"] = "Browse Jobs";
+}
+
+<!-- ── Hero ─────────────────────────────────────────────────────── -->
+<section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid-lines"></div>
+
+    <div class="hero-content">
+        @* <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            @Model.TotalCount open position@(Model.TotalCount != 1 ? "s" : "") available now
+        </div>
+         *@
+        <h1>Find Work<br />That <em
+            style="-webkit-text-fill-color:inherit; font-style:normal; color:var(--accent-light);">Moves</em> You
+        </h1>
+
+        <p>Discover curated opportunities from top companies across every industry. Your next chapter starts here.</p>
+
+        <!-- Search Bar -->
+        <div class="search-wrap">
+            <form method="get" asp-action="Index" asp-controller="Jobs" class="search-bar">
+                <div class="search-input-wrap">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input type="text" name="search" value="@Model.Search" autocomplete="off" id="search-input" />
+                </div>
+                <div class="search-select-wrap">
+                    @Html.DropDownList("categoryId",
+                        ViewBag.Categories as Microsoft.AspNetCore.Mvc.Rendering.SelectList,
+                        "All Categories", new { })
+                </div>
+                <div class="search-select-wrap" style="border-right:none;">
+                    <select name="type">
+                        <option value="">All Types</option>
+                        @foreach (var t in Enum.GetValues<JobType>())
+                        {
+                            <option value="@t" selected="@(Model.Type == t ? "selected" : null)">@t</option>
+                        }
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.5">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    Search
+                </button>
+                @if (Model.Search != null || Model.CategoryId != null || Model.Type != null)
+                {
+                    <a asp-action="Index" class="btn btn-ghost btn-sm" style="margin-left:2px;">✕ Clear</a>
+                }
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- ── Results ────────────────────────────────────────────────────── -->
+<div class="results-header reveal">
+    <p class="results-count">
+        Showing <strong>@Model.TotalCount</strong> open position@(Model.TotalCount != 1 ? "s" : "")
+        @if (!string.IsNullOrEmpty(Model.Search))
+        {
+            <span> for "<em style="color:var(--accent-light);">@Model.Search</em>"</span>
+        }
+    </p>
+    @if (User.IsInRole("Employer"))
+    {
+        <a asp-controller="Jobs" asp-action="Create" class="btn btn-primary btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Post a Job
+        </a>
+    }
+</div>
+
+@if (!Model.Items.Any())
+{
+    <div class="empty-state reveal">
+        <span class="empty-icon">🔍</span>
+        <h3>No matching jobs found</h3>
+        <p>Try different search terms or clear the filters to see all listings</p>
+        <a asp-action="Index" class="btn btn-primary" style="margin-top:1.5rem;">Browse All Jobs</a>
+    </div>
+}
+else
+{
+    <div class="job-grid">
+        @{
+            int cardIdx = 0;
+        }
+        @foreach (var job in Model.Items)
+        {
+            cardIdx++;
+            string logo = GetCompanyEmoji(job.Category);
+            <a class="job-card" asp-controller="Jobs" asp-action="Details" asp-route-id="@job.Id"
+               style="animation-delay:@(cardIdx * 0.07)s">
+                <div class="job-card-header">
+                    <div class="job-card-logo">@logo</div>
+                    <div class="job-card-title-wrap">
+                        <div class="job-title">@job.Title</div>
+                        <div class="job-company">@job.CompanyName</div>
+                    </div>
+                    <span class="badge @GetTypeBadge(job.Type)">@job.Type</span>
+                </div>
+
+                <div class="job-meta">
+                    <span class="job-meta-item">📍 @job.Location</span>
+                    <span class="job-meta-item">💰 @job.SalaryRange</span>
+                    <span class="job-meta-item">📁 @job.Category</span>
+                </div>
+
+                <div class="job-footer">
+                    <span class="job-date">@GetRelativeTime(job.PostedAt)</span>
+                    <span class="badge badge-gray">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                        @job.ApplicationCount
+                    </span>
+                </div>
+            </a>
+        }
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <div class="pagination reveal">
+            <a class="page-btn @(Model.Page <= 1 ? "disabled" : "")" asp-action="Index" asp-route-search="@Model.Search"
+               asp-route-categoryId="@Model.CategoryId" asp-route-type="@Model.Type" asp-route-page="@(Model.Page - 1)"
+               title="Previous">
+                ‹
+            </a>
+            @for (int i = Math.Max(1, Model.Page - 2); i <= Math.Min(Model.TotalPages, Model.Page + 2); i++)
+            {
+                <a class="page-btn @(i == Model.Page ? "active" : "")" asp-action="Index" asp-route-search="@Model.Search"
+                   asp-route-categoryId="@Model.CategoryId" asp-route-type="@Model.Type" asp-route-page="@i">@i</a>
+            }
+            <a class="page-btn @(Model.Page >= Model.TotalPages ? "disabled" : "")" asp-action="Index"
+               asp-route-search="@Model.Search" asp-route-categoryId="@Model.CategoryId" asp-route-type="@Model.Type"
+               asp-route-page="@(Model.Page + 1)" title="Next">
+                ›
+            </a>
+        </div>
+    }
+}
+
+@functions {
+    string GetTypeBadge(JobBoard.Models.Entities.JobType t) => t switch
+    {
+        JobBoard.Models.Entities.JobType.FullTime => "badge-green",
+        JobBoard.Models.Entities.JobType.Remote => "badge-accent",
+        JobBoard.Models.Entities.JobType.PartTime => "badge-yellow",
+        JobBoard.Models.Entities.JobType.Contract => "badge-blue",
+        _ => "badge-gray"
+    };
+    string GetCompanyEmoji(string cat) => cat?.ToLower() switch
+    {
+        var c when c?.Contains("software") == true || c?.Contains("tech") == true => "💻",
+        var c when c?.Contains("design") == true => "🎨",
+        var c when c?.Contains("market") == true => "📣",
+        var c when c?.Contains("finance") == true => "📊",
+        _ => "🏢"
+    };
+    string GetRelativeTime(DateTime dt)
+    {
+        var diff = DateTime.UtcNow - dt;
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
+        if (diff.TotalDays < 30) return $"{(int)(diff.TotalDays / 7)}w ago";
+        return dt.ToString("MMM dd, yyyy");
+    }
+}
