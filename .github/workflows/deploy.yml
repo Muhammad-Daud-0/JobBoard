@@ -20,12 +20,17 @@ jobs:
     
     - name: Publish Application
       run: dotnet publish -c Release -o ./publish
-    
+
+    - name: Delete locked DLL
+        run: |
+          curl -v "ftp://site75684:${{ secrets.MONSTERASP_FTP_PASSWORD }}@site75684.siteasp.net/wwwroot/JobBoard.dll" -Q "DELE wwwroot/JobBoard.dll"
+        continue-on-error: true
+
     - name: Deploy via FTP to MonsterASP
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
-        server: site75684.siteasp.net  # Replace with your actual MonsterASP FTP server host
+        server: site75684.siteasp.net  
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./publish/
-        server-dir: /wwwroot/       # Verify if your main directory is /wwwroot/ or / in MonsterASP
+        server-dir: /wwwroot/      
