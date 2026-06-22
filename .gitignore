@@ -17,7 +17,6 @@ wwwroot/uploads/*
 # VS Code settings
 .vscode/
 .config
-.github
 
 # Logs
 *.log
