@@ -9,3 +9,13 @@
 
 # Environment files (local secrets)
 .env
+
+# User uploads
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep
+
+# VS Code settings
+.vscode/
+
+# Logs
+*.log

@@ -2,7 +2,6 @@
 
 # 💼 JobBoard
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://img.shields.io/badge/.NET-8.0-purple)](https://dotnet.microsoft.com/)
 [![SQL Server](https://img.shields.io/badge/Database-SQL%20Server-CC2927)](https://www.microsoft.com/sql-server)
 
@@ -20,11 +19,8 @@ A comprehensive, production-ready Job Board application built with **ASP.NET Cor
 - [Configuration](#configuration)
 - [Database](#database)
 - [API Documentation](#api-documentation)
-- [Usage Guide](#usage-guide)
 - [User Roles](#user-roles)
 - [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Overview
 
@@ -208,23 +204,33 @@ Authentication__Google__ClientSecret=your_google_client_secret
 ASPNETCORE_ENVIRONMENT=Development
 ```
 
-### appsettings.json
+## 👤 User Roles
 
-Update `appsettings.json` for your environment:
+The application supports three main user roles:
 
-```json
-{
-	"ConnectionStrings": {
-		"DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=JobBoardDb;Trusted_Connection=true;"
-	},
-	"Logging": {
-		"LogLevel": {
-			"Default": "Information",
-			"Microsoft.EntityFrameworkCore": "Warning"
-		}
-	}
-}
-```
+### Job Seeker
+
+- Default role for new users
+- Can browse and search job listings
+- Can submit job applications
+- Can chat with recruiters
+- Can manage personal profile and CV
+
+### Employer
+
+- Can create, edit, and delete job postings
+- Can manage and review job applications
+- Can communicate with job seekers
+- Can track job posting performance
+- Access to applicant management dashboard
+
+### Administrator
+
+- Full system access
+- Can manage all users and assign roles
+- Can moderate content (jobs, applications)
+- Can view system-wide statistics
+- Can access audit logs and monitoring
 
 ## 💾 Database
 
@@ -302,99 +308,6 @@ https://localhost:5001/swagger
 - `GET /api/account/profile` - Get user profile
 - `PUT /api/account/profile` - Update user profile
 
-## 👥 Usage Guide
-
-### For Job Seekers
-
-1. **Register/Login**
-   - Create an account or use Google OAuth
-   - Complete your profile with contact information
-
-2. **Browse Jobs**
-   - Navigate to the Jobs page
-   - Filter by category or use search functionality
-   - Click on a job to view full details
-
-3. **Apply for Jobs**
-   - Click "Apply" on any job listing
-   - Upload your CV in the application form
-   - Submit your application
-
-4. **Track Applications**
-   - Visit "My Applications" to see all submissions
-   - Monitor the status of each application
-
-5. **Chat with Recruiters**
-   - Click the chat icon when an employer initiates contact
-   - Send and receive messages in real-time
-
-### For Employers
-
-1. **Register as Employer**
-   - Create account and select employer role during registration
-   - Complete company information
-
-2. **Post a Job**
-   - Navigate to "Create Job"
-   - Fill in job title, description, requirements
-   - Set salary range and category
-   - Publish the job
-
-3. **Manage Applications**
-   - Go to "My Jobs" to view all postings
-   - Click on a job to see all applicants
-   - Review CVs and application details
-
-4. **Communicate**
-   - Click on an application to view applicant details
-   - Start a chat conversation with interested candidates
-   - Exchange messages in real-time
-
-### For Administrators
-
-1. **User Management**
-   - Access Admin Dashboard
-   - View, manage, and modify user accounts
-   - Assign or revoke admin roles
-
-2. **Job Moderation**
-   - Review all job postings
-   - Remove inappropriate job listings
-   - Monitor job posting activity
-
-3. **System Oversight**
-   - View system statistics and activity
-   - Monitor application trends
-   - Track platform usage metrics
-
-## 👤 User Roles
-
-The application supports three main user roles:
-
-### Job Seeker
-
-- Default role for new users
-- Can browse and search job listings
-- Can submit job applications
-- Can chat with recruiters
-- Can manage personal profile and CV
-
-### Employer
-
-- Can create, edit, and delete job postings
-- Can manage and review job applications
-- Can communicate with job seekers
-- Can track job posting performance
-- Access to applicant management dashboard
-
-### Administrator
-
-- Full system access
-- Can manage all users and assign roles
-- Can moderate content (jobs, applications)
-- Can view system-wide statistics
-- Can access audit logs and monitoring
-
 ## 🔧 Troubleshooting
 
 ### Common Issues
@@ -452,101 +365,3 @@ dotnet clean
 dotnet restore
 dotnet build
 ```
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-1. **Fork the repository**
-
-   ```bash
-   git clone https://github.com/yourusername/JobBoard.git
-   ```
-
-2. **Create a feature branch**
-
-   ```bash
-   git checkout -b feature/YourFeatureName
-   ```
-
-3. **Make your changes**
-   - Follow existing code style and conventions
-   - Add comments for complex logic
-   - Test your changes thoroughly
-
-4. **Commit with descriptive messages**
-
-   ```bash
-   git commit -m "Add: description of your changes"
-   ```
-
-5. **Push to your fork**
-
-   ```bash
-   git push origin feature/YourFeatureName
-   ```
-
-6. **Create a Pull Request**
-   - Provide a clear description of changes
-   - Reference any related issues
-   - Include any relevant screenshots or logs
-
-### Code Style
-
-- Follow [C# naming conventions](https://docs.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/naming-conventions)
-- Use meaningful variable and method names
-- Keep methods focused and single-responsibility
-- Add XML documentation comments for public methods
-- Maintain consistent indentation (4 spaces)
-
-## 📄 License
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
-The MIT License permits:
-
-- ✅ Commercial use
-- ✅ Modification
-- ✅ Distribution
-- ✅ Private use
-
-With the conditions:
-
-- ⚠️ Include license and copyright notice
-
-## 📞 Support & Contact
-
-### Getting Help
-
-- **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/Muhammad-Daud-0/JobBoard/issues)
-- **Discussions**: Join [GitHub Discussions](https://github.com/Muhammad-Daud-0/JobBoard/discussions) for Q&A
-
-### Contact Information
-
-- **Author**: Muhammad Daud
-- **Email**: [contact@example.com](mailto:contact@example.com)
-- **GitHub**: [@Muhammad-Daud-0](https://github.com/Muhammad-Daud-0)
-
----
-
-### Acknowledgments
-
-- ASP.NET Core team for the excellent framework
-- Entity Framework Core for ORM capabilities
-- FluentValidation for validation framework
-- Bootstrap community for UI components
-
-### Project Roadmap
-
-- [ ] Enhanced search and filtering
-- [ ] Advanced job recommendations AI
-- [ ] Video interview integration
-- [ ] Notification system (email, SMS)
-- [ ] Payment integration for premium features
-- [ ] Mobile app (iOS/Android)
-- [ ] API rate limiting and security enhancements
-- [ ] Performance optimization and caching
-
----
-
-**Happy coding! 🚀**
